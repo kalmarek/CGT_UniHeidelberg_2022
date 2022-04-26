@@ -1,0 +1,836 @@
+### A Pluto.jl notebook ###
+# v0.19.0
+
+using Markdown
+using InteractiveUtils
+
+# ╔═╡ 3cd6308a-2293-4b9d-83a4-7748cc49fa54
+using BenchmarkTools
+
+# ╔═╡ c728b133-37bc-41f6-8e88-1ca8df6a7a4f
+md"
+# What is `julia`?
+
+`julia` is a modern language that is dynamic, strongly typed, _jit_ compiled (internally) to machine language and therefore can be as fast as staticly typed fast languages (`C`/`C++`). If you didn't understand this sentence, here's a more digestable gist:
+
+`julia` language can be used in an interactive environment and without longish setups and can be written in a form that looks similar to pseudocode (users of 	`MATLAB`/`octave` will notice strong similarity, a bit less similarity with `python`). Moreover with a little bit of care julia can run really fast.
+"
+
+# ╔═╡ bcf0e9dd-5261-4477-aa7b-3c27ea16180b
+md"
+## Other materials introducing `julia`:
+* [Think Julia](https://benlauwens.github.io/ThinkJulia.jl/latest/book.html) a very extensive book written in a friendly matter with exercises.
+* [Zero2Hero](https://www.youtube.com/watch?v=Fi7Pf2NveH0) If you prefer a video introduction (assumes a bit programming), but the materials are also available in the [written form](https://github.com/Datseris/Zero2Hero-JuliaWorkshop), see e.g. [this](https://github.com/Datseris/Zero2Hero-JuliaWorkshop/blob/master/1-JuliaBasics.ipynb) for much more thorough introduction.
+* [Julia Express](http://bogumilkaminski.pl/files/julia_express.pdf) rather a cheatsheet than a book/manual, but plenty of useful syntax, well categorized, 17 pages of it.
+"
+
+# ╔═╡ 09789c5d-97af-45ab-baaf-92bd9ef63455
+md"`julia` can be used as calculator. For example:"
+
+# ╔═╡ 345c44c5-c0e3-4a5f-ba64-f60935f77bf7
+sin(2)
+
+# ╔═╡ 2d7170eb-3201-483e-b951-86dffd327e2b
+md"Are plenty of (arithmetic) operators (such as `+`, `-`, `*`, `^`, `/`, `//`, `%`, `div`, `rem`, ...) and functions (such as `sin`, `factorial`, etc.) already defined.
+For operators have a look at the beginning of the [section from julia manual](https://docs.julialang.org/en/v1/manual/mathematical-operations/). We will come back to functions later."
+
+# ╔═╡ faa7705c-c044-46be-ba91-6b0adef24d4c
+md"We can also define variables by simply assign value to a name:"
+
+# ╔═╡ c1198833-3c4a-4106-8bbb-6534a917cd72
+x = 2*π
+
+# ╔═╡ cdc234ea-e482-40bc-b4ef-7adfc8d38aca
+md"and access the value assigned to a name somewhere else:"
+
+# ╔═╡ 688085ec-a8ed-4830-9081-2d1f6a6ab87f
+sin(x) # ooops is the value correct?!
+
+# ╔═╡ ed74560c-e9a6-4e38-8efb-f51cc3eadab6
+md"To learn more about variables (and their allowed names) have a brief look at examples [here](https://docs.julialang.org/en/v1/manual/variables/).
+"
+
+# ╔═╡ 53167dd4-209d-4ecf-a0aa-54aca12fffd2
+md"# Assignment, comparison and `if` statements
+There is a difference between assignment (`=`) and equality comparison (`==`):"
+
+# ╔═╡ f7b322e5-cad7-41db-b391-c46844008f3d
+z = 1.2
+
+# ╔═╡ bcf0dd01-28e3-4b06-8f11-c131a3526334
+z == 1.2
+
+# ╔═╡ 74d549ce-0783-49fa-a150-1763f06ecbfa
+y = 1.3
+
+# ╔═╡ 9b3dbb28-9f3a-421f-9f26-ea39642d3959
+y == z
+
+# ╔═╡ c9c11f7a-c0b5-4c72-9cfc-3b94a787a055
+md"Those `true` and `false` (so called `Booleans`) can be used in _conditional_ statements such as"
+
+# ╔═╡ 15ed6e94-4355-42a8-bad2-a53cd97cf290
+if y == z
+    "In the castle of Aaaaargh..."
+else
+	"Where is it? Behind the rabbit?"
+end
+
+# ╔═╡ 36e5468a-a5dc-42cd-81b7-92b0447ca8e4
+md"As you can see `if` block may contain `else` clause (or several `elseif` ones) and is finished by `end`. In general it looks like this:
+```julia
+if condition1
+	…
+elseif condition2
+	…
+elseif …
+⋮
+else
+	…
+end
+```
+
+In julia **every** statement (such as this `if -- else` block) returns a value. Here conditionally on values of `y` and `z` one of the strings is returned. Note: you can negate the condition by either writing `y !== x` or more generally by placing exclamation mark: `!(y == x)`.
+
+There is more about conditional statements than is presented here, but for now this will suffice for our needs. If you want to learn more, have a look [here](https://docs.julialang.org/en/v1/manual/control-flow/#man-conditional-evaluation) (but by no means you need to read the whole page!).
+"
+
+# ╔═╡ 2d45fc43-ede5-4c05-837a-f96c17734550
+md"# Loops and iteration
+
+Can you guess what does the following code do?
+"
+
+# ╔═╡ a0542649-cbf2-4137-bb69-3fbef8fa2c98
+md"This is so called `for` loop where we iterate over consecutive natural numbers from `1` to `5` and sum them together. We could much simpler express it as `sum(1:5)`:"
+
+# ╔═╡ c2c925c7-ce88-4f1c-94f7-19451eefd3e0
+sum(1:5)
+
+# ╔═╡ 813e73fb-470c-47fc-940e-da03a105ca79
+md"A different form of iteration is so called _array comprehension_, e.g.
+```julia
+[x^2 for x in 5:15]
+```
+creates an array (a list) of squares of integers from `5` to `15`. Let's observe it in action:"
+
+# ╔═╡ 4e423cda-c448-4750-b420-a6982033b6f5
+[x^2 for x in 5:15]
+
+# ╔═╡ 197bc9a4-2695-45bc-8ff2-b0cdd73b30e9
+md"such iteration can have plenty of variables and contain conditional statements as well. For example this code:
+```julia
+[(x,y) for x in -7:7 for y in -7:7 if x^2 + y^2 <= 7^2]
+```
+finds all integer points on the plane inside a circle of radius 7.
+We could even (very poorly) approximate π with it!
+"
+
+# ╔═╡ 3fa1fa90-57ab-4a30-afdd-bfa0c866f3ef
+md"We make a major performance blunder, of course, since we don't need to create all of those points when we just need to count them... but that's a story for another time."
+
+# ╔═╡ ab914178-f909-44b0-811c-418f2d4939b3
+md"Iteration is an important concept and one of the major tasks in the first part of the course will be to efficiently iterate (without repetitions) over all elements of a permutation group."
+
+# ╔═╡ 7fd81fe1-c810-44ca-baa5-9d6a9555be74
+md"# Functions
+Let us talk about functions. There are three ways to define them in `julia`:
+* **full** definition looks as follows:
+```julia
+function my_fancy_phi(argument1, argument2, ...)
+    # do some computation here
+    y = ...
+    return y
+end
+```
+this function takes arguments and performs some computations with them; finally `y` is returned as the value of the function.
+* **one-liner** definition is just a shortcut for the above where the body fits into a single line, e.g.
+```julia
+my_fancy_phi(a, b) = 2*a + b^2
+```
+simple and short without `function`, `return` and `end` (who needs them anyway? :)
+* finally there are **anonymous** functions where you could just say
+```julia
+x -> sin(2*x)
+```
+You could define `h = x -> sin(x*π)` and then ask for `h(2)` but the most popular case is when one wants to e.g. sum not all integers from `1:5`, but e.g. their squares:
+"
+
+# ╔═╡ 4a4fba03-234e-465d-bc97-988e6e70ef69
+sum(x->x^2, 1:5) # function sum accepts also a function as the first argument
+
+# ╔═╡ 4b2035f0-55e8-4f39-a6a7-e8882f493dfb
+md"
+Remember the approximation of `pi` with `let` block? 
+```julia
+let R = 1000
+	4*count(x^2 + y^2 ≤ R^2 for x in 0:R for y in 1:R)/R^2
+end
+```
+
+Let's turn it into a function!
+"
+
+# ╔═╡ cb141457-2671-4582-96ef-5c03d4d35814
+md"
+## Recursive functions
+Let us have a look at a more complicated function: the one computing Fibbonachi numbers. It's a classical form of a recursive definition:
+* ``Fib(0) = 1``
+* ``Fib(1) = 1``
+* ``Fib(n) = Fib(n-1) + Fib(n-2)``
+How can we achieve that with julia?
+"
+
+# ╔═╡ 23f1a09a-2b84-4b9b-b90c-c75a09195fa9
+
+
+# ╔═╡ b686cf1a-6529-402c-a16c-df0feec66b53
+
+
+# ╔═╡ 58a09780-7776-4a79-95c3-266193c7e30a
+
+
+# ╔═╡ 7e9eb4dc-972b-4d0d-a1c8-f4fef379ca19
+
+
+# ╔═╡ 6f221be1-1ab2-4f26-a4ad-f2c493c5e290
+
+
+# ╔═╡ b275cf5f-846d-4487-9c5e-2ca9344bc807
+md"# Types
+We haven't talked about it but types could be observed running in the wild as we did our computations above. In `julia` we don't need to talk about types (at least) at the beginning), but they are _silently attached_ to everything we compute. There are a few build-in types: `Int`, `Float64`, `String`, `Array` (`Vector`, `Matrix`, ...), `BigInt`, etc. Let's observe them in action:
+"
+
+# ╔═╡ 3a2d237d-d924-4b2a-b767-26fb047c0886
+typeof(2)
+
+# ╔═╡ cec7a620-9147-4afc-8948-80f91ffd1268
+typeof(2.0)
+
+# ╔═╡ a7151ae1-6d68-45d0-8840-8b994ed9f734
+typeof("2.0")
+
+# ╔═╡ 6ecc64b2-dbfa-4ccd-a2aa-286417b7d8ba
+typeof(2^50)
+
+# ╔═╡ 504a5cc2-0d06-48a1-a805-2ed5d4bd6a70
+2^62 
+
+# ╔═╡ 3e50b42e-3ce4-4df2-a6cd-96a79cd09e2b
+2^63 # surprised?
+
+# ╔═╡ 9bf248aa-7897-4104-94c5-195314dafb44
+bitstring(2)
+
+# ╔═╡ 785ec286-280f-4ef7-81e5-1e80c750371c
+bitstring(2^62)
+
+# ╔═╡ 6889507f-1964-4c89-b06c-e195a2484b7c
+bitstring(2^63)
+
+# ╔═╡ 2d1f1731-381c-4501-a252-f4e34db8bac8
+bitstring(-1)
+
+# ╔═╡ 9ab2675c-d6a2-494e-847c-4a886a1166b6
+md"Due to finite precision of numbers stored on our computers one has to be rather careful not to introduce silent errors, e.g.
+```julia
+(2^63)÷2 + 2^62 == 0
+```
+one possible way to avoid it is to use _multiprecision_ integers, aka `BigInt`s:
+"
+
+# ╔═╡ 1278b847-8dfc-4afc-b7bb-c7877f5fb828
+typeof(big(2))
+
+# ╔═╡ e3612ed5-0e34-4b77-875e-a18294d307c9
+(big(2)^63)
+
+# ╔═╡ ad18678d-4d69-4064-bcd8-2b4bc6c0c60a
+md"
+There is a whole __Hierarchy of types__ present for objects defined in julia. For example both `Int` and `BigInt` are subtypes of (abstract) `Integer` type. Which in turn is a subtype of `Real`, which is a `Number`. At the top of the hierarchy sits `Any`.
+
+In julia being a subtype can be expressed by writing e.g. `Int <: Integer`.
+"
+
+# ╔═╡ 518cafd6-edcc-4091-9a0a-afa3406311cb
+Int <: Integer
+
+# ╔═╡ 99138265-89ed-4308-9d39-23e858dbcf89
+Int <: BigInt
+
+# ╔═╡ 14a7e4a1-f8de-4dc5-a59a-f4ad42fa066a
+supertype(Integer)
+
+# ╔═╡ f55616a4-0fa4-4bf6-9eac-b8db35a34f28
+supertypes(Int)
+
+# ╔═╡ cb796ae0-f79a-47c7-96a0-0c775fa59297
+md"
+## Methods
+Talking about types brings us to one of the core concepts of `julia`: function methods. Each function in julia has associates (multiple) _methods_ to it. For example:
+"
+
+# ╔═╡ f82daca4-ec82-497c-975a-b1065ff30624
+length([1,2,3])
+
+# ╔═╡ ebc06065-4ad0-4b9b-b4f3-cf326a40a697
+length("qwerty")
+
+# ╔═╡ 0ba52767-a5f8-4517-9b84-7762281c3336
+md"
+The same function `lenght` has been used in two different contexts (on a `Vector` and on a `String`) and produces reasonable answers. This is because `length` has different __methods__ which are applied according to the __type__ of the argument. Let's have a look:
+"
+
+# ╔═╡ 61cf408f-606d-4fd9-8b6d-b0c08425ee65
+@which length([1,2,3])
+
+# ╔═╡ 5cd9f85c-a4ba-454d-a480-f8734331cc84
+@which length("qwerty")
+
+# ╔═╡ dcc4aac6-8fbf-42bf-b171-abd48d625071
+md"
+In total, currently (i.e. in this session) there are `~80` methods for measuring `length` defined:
+"
+
+# ╔═╡ d8034870-dd0a-4dce-971c-a47a03f8ca89
+# ╠═╡ disabled = true
+#=╠═╡
+methods(length)
+  ╠═╡ =#
+
+# ╔═╡ f892452a-91b1-492e-89a9-17dcf7d85c5c
+md"
+We will soon learn how to add another methods for e.g. `length` (which will be needed for the concept of `iteration`) but for now let us play with our own function:
+"
+
+# ╔═╡ 97ef8074-080a-490a-9d52-52b493fc29b2
+my_function(x::Int) = 3*x
+
+# ╔═╡ 1a4acfe8-9197-4f74-9223-4e06e088b427
+my_function(5)
+
+# ╔═╡ ece7cc12-a1aa-40d6-b5ca-7622a701cc78
+md"
+What will happen if we call `my_function` with `5.0`?
+```julia
+MethodError: no method matching my_function(::Float64)
+
+Closest candidates are:
+
+my_function(!Matched::Int64) at ~/Mathematics/Teaching/2022/Computational Group Theory/00_Introduction_to_julia.jl#==#97ef8074-080a-490a-9d52-52b493fc29b2:1
+
+    top-level scope@Local: 1[inlined]
+```
+Well `julia` is is helpless here because we **haven't told it** what `my_function` should do with _floating point_ values! So let's do it now:
+
+"
+
+# ╔═╡ 0e3beb19-a18a-456d-930f-1751c5e7814e
+# my_function(x::Float64) = 2*x
+
+# ╔═╡ 278017d0-ff3c-423d-a5ad-91bd82cb01cf
+md"
+We could also define
+```julia
+my_function(x) = \"A fish!\"
+```
+which is the same as writing
+```julia
+my_function(x::Any) = \"A fish!\"
+```
+But now maybe we want to work with `BigInt`s, but when we try, we encounter the same problem as with `Float64`s:
+```julia
+MethodError: no method matching my_function(::BigInt)
+
+Closest candidates are:
+
+my_function(!Matched::Int64) at ~/Mathematics/Teaching/2022/Computational Group Theory/00_Introduction_to_julia.jl#==#97ef8074-080a-490a-9d52-52b493fc29b2:1
+
+    top-level scope@Local: 1[inlined]
+```
+The proper solution is __not__ to define a special method
+```julia
+my_function(x::BigInt) = 3*x
+```
+but rather define
+```julia
+my_function(x::Integer) = 3*x
+```
+which will work for all subtypes of `Integer` (even the ones we haven't seen!).
+"
+
+# ╔═╡ 88b7647d-08bf-41aa-8a7d-5c9ad7df8157
+md"
+## Multiple dispatch
+In `julia` __multiple dispatch__ works as follows:
+1. given a function call (such as `my_function(5.0)`) **identyfy the types** of arguments
+2. search (a tree of all methods) for the **most specific method** of `my_function` which is applicable to the types of the arguments
+3. execute **this particular** method.
+
+This is very much alike to what we as mathematicians tend to do: it is not well defined what e.g. `A*v` means until we learn that `A` is a `Matrix` and `v` is a `Vector` and then it's clear that `*` between denotes _matrix-vector multiplication_, the recipe (i.e. `method`) for which could be found in a book on LinearAlgebra. But had `A` and `v` denoted different objects, we'd need to look for a different textbook to find the meaning of `*`.
+
+For example `julia` (sensibly -- at least to mathematicians with background in algebra) defines an method for `*` with `String` arguments to mean concatenation:
+"
+
+# ╔═╡ 4698766b-4a1d-4f6c-bbca-3f8d134f03f3
+"ex" * "parrot"
+
+# ╔═╡ 198ab65c-fb94-43bb-9813-c9b5c9787c1e
+md"
+**Question**: Why is it \"the mathematically correct\" meaning?
+"
+
+# ╔═╡ f96d145f-ec3b-45e0-9283-269d9da6575b
+md"# First structures
+
+We will finish this introduction by showing how to implement the (additive) group of integers modulo `n` and showcasting the key aspect of julia: **multiple dispatch**.
+
+We begin by creating a `struct` (structured type) representing a residue modulo `n`."
+
+# ╔═╡ b9526249-0cb9-44e3-b161-a57cf29d621e
+struct Residue_simple
+	residue::Int
+	modulus::Int
+end
+
+# ╔═╡ 4b66abd4-0bac-40ee-80f6-59b56ee9ee1a
+md"
+There are several new things happening above.
+* First the `struct` word followed by name (`Residue`), list of fields (`resiude`, `modulus`) closed by `end` defines a new _entity_ or a `type` in julia.
+* Second, the `::Int` after `residue` tells `julia` that we _promise_ that `residue` will be always an `Int`, therefore julia is allowed to perform optimizations based on this information.
+* Third such `Residue` can be instantiated (created) by providing `residue` and `modulus` (both need to be `Int`s).
+
+Let's have a look.
+"
+
+# ╔═╡ 25d2f0f1-4dc2-4fb9-8eb9-af8563e31807
+a = Residue_simple(3, 5)
+
+# ╔═╡ 8ba6dfd6-4ff3-4a6b-b3c3-5b102d4932fc
+md"
+This is how we access the \"fields\" of a structured type in `julia`:
+"
+
+# ╔═╡ 43c57164-15f3-41c0-9ae5-19341f26500a
+a.residue
+
+# ╔═╡ e9a8462f-8025-4853-8770-6f2f1bd15c69
+a.modulus
+
+# ╔═╡ 661c703b-9523-41f4-8b1c-6ef6382fc7ba
+
+
+# ╔═╡ d0da5232-2c25-430b-a888-2c0bc4395ea3
+Residue_simple(-2, 5)
+
+# ╔═╡ 8e50e663-2c54-4b27-a5ef-a74f3cddf491
+Residue_simple(7, -5)
+
+# ╔═╡ 56ce9add-08b2-4637-aa2f-9decddad8c9f
+md"
+As we can see we can create plenty of invalid residues, so we'd need e.g. a mechanism to always bring residue to `0..modulus-1` interval on creation. Such mechanism is called __internal constructor__:
+"
+
+# ╔═╡ 7a1258ca-c981-462e-b6d1-4c7fb38bf63a
+struct Residue
+	residue::Int
+	modulus::Int
+
+	function Residue(residue, modulus)
+		@assert modulus > 1 "Modulus must be greater than 1, got $modulus"
+		return new(mod(residue, modulus), modulus)
+	end
+end
+
+# ╔═╡ e97c27ff-6d26-4305-a671-359fcb012410
+Residue(3,5)
+
+# ╔═╡ e4df1aa7-4112-4b80-9326-099a0abdd7ee
+Residue(-2, 5)
+
+# ╔═╡ e837dcad-17d3-4935-9633-f6617b4867d3
+Residue(7, -5)
+
+# ╔═╡ 7d7b95c1-b06c-46b8-9f5a-d863df1590a9
+md"
+For displaying a type julia calls method
+```julia
+Base.show(io::IO, x)
+```
+(`IO` is a special type denoting anything that can be written to). Let us define a method specific to our `Residue2` that will bring the display of `Residue2` to a more humanly format: 
+"
+
+# ╔═╡ d8c5d154-5bf6-4380-bc82-65167e63e49f
+Base.show(io::IO, x::Residue) = print(io, x.residue, " mod ", x.modulus)
+
+# ╔═╡ bc51fe4d-d142-428f-9628-403eb5f3e1b2
+A = Residue(2, 5)
+
+# ╔═╡ b69f909b-2543-4c5c-9a0f-1de0e51b5aa9
+B = Residue(3, 5)
+
+# ╔═╡ 2fc83333-7145-4a54-bc7c-b65f67d7ae74
+md"
+Since we haven't defined `+` for `Residue` if we try to add `A + B` we'll get 
+```julia
+MethodError: no method matching +(::Main.workspace#146.Residue, ::Main.workspace#146.Residue)
+
+Closest candidates are:
+
++(::Any, ::Any, !Matched::Any, !Matched::Any...) at ~/.julia/juliaup/julia-1.7.2+0~x64/share/julia/base/operators.jl:655
+
+    top-level scope@Local: 1[inlined]
+```
+Let's ammend this!
+"
+
+# ╔═╡ 58d9e95c-edc4-455f-9424-d0495e197492
+function Base.:+(x::Residue, y::Residue)
+	@assert x.modulus == y.modulus "Addition of residues with different moduli is not well defined"
+	return Residue(x.residue + y.residue, x.modulus)
+end
+
+# ╔═╡ 9d1b140e-bf36-11ec-3e35-3f278f1682c4
+2 + 2 * 2
+
+# ╔═╡ 8a69def3-afbe-4779-84fb-71a933f08975
+begin
+	s = 0
+	for i in 1:5
+		s += i
+	end
+	s
+end
+
+# ╔═╡ 9394a38d-2e88-4c7b-bb5e-e78809a9a2f2
+let R = 1000
+	length([(x,y) for x in -R:R for y in -R:R if x^2 + y^2 <= R^2])/R^2
+end
+
+# ╔═╡ 9bfabb49-26b5-4182-b814-cfed9b74b2c7
+let R = 1000
+	4*count(x^2 + y^2 ≤ R^2 for x in 0:R for y in 1:R)/R^2
+end
+
+# ╔═╡ 6343e1f3-4be0-4055-96a2-d39f828ab7e6
+function approximate_π(R)
+	R² = R^2
+	quarter = count(x^2 + y^2 ≤ R² for x in 0:R for y in 1:R)
+	return (4quarter + 1)/R²
+end
+
+# ╔═╡ bb94fb21-7605-40e4-936a-f93e6a4c391b
+approximate_π(1_000)
+# in literals numbers one can add underscores to make them more readable
+
+# ╔═╡ 4c1d0a58-08be-4966-9620-38c12589dd18
+function Fib1(n)
+	if n <= 0
+		return 1
+	elseif n == 1
+		return 1
+	else
+		return Fib1(n-1) + Fib1(n-2)
+	end
+end
+
+# ╔═╡ 36f2f86a-42f5-4436-a9c5-bae68f39ed9e
+[Fib1(n) for n in 0:10]
+
+# ╔═╡ 0e73015f-0555-491a-ae62-44e7d4685e6f
+# ╠═╡ disabled = true
+#=╠═╡
+Fib1(43)
+  ╠═╡ =#
+
+# ╔═╡ 96c924cb-3625-4f9b-92df-432902484815
+function Fib2(n)
+	if n <= 0
+		return 1
+	elseif n == 1
+		return 1
+	else
+		Fₙ₋₂ = Fib2(0) 
+		Fₙ₋₁ = Fib2(1)
+		Fₙ = 0 
+		for i in 2:n
+			Fₙ = Fₙ₋₁ + Fₙ₋₂
+			Fₙ₋₂ = Fₙ₋₁
+			Fₙ₋₁ = Fₙ
+		end
+		return Fₙ
+	end
+end
+
+# ╔═╡ 02b25aea-2ad5-4463-8587-994c5c6c92b3
+[Fib2(n) for n in 0:10]
+
+# ╔═╡ be731321-3972-41d3-bb70-7b56bde32d9a
+Fib2(43)
+
+# ╔═╡ ee30711a-9050-4ed3-9971-15ec679f0011
+@benchmark Fib2(1000000)
+
+# ╔═╡ 4ffa197a-0d84-4b43-b926-4a83a8ecead7
+(big(2)^63)÷2 + 2^62
+
+# ╔═╡ 8a449164-75f1-4fd8-948b-de596ceefc4f
+A + B
+
+# ╔═╡ 65976f9d-566e-40d7-9817-99069c5fc738
+Residue(3, 5) + Residue(3, 6)
+
+# ╔═╡ f87cad11-a9c5-497d-a392-5cf07bb2a190
+md"
+To complete the arithmetic we would need to implement
+* _unary_ minus in the form `Base.:-(x::Residue)`
+* zero element in the form `Base.zero(x::Residue)`
+* equality check in the form `Base.:(==)(x::Residue, y::Residue)
+
+**Exercise 1**: 
+ * Complete those definitions so that the cell below doesn't throw any error.
+ * what method needs to be implemented so that `@assert A + 3 == zero(A)` also holds?
+"
+
+# ╔═╡ 57dba8f7-e77a-4d91-8529-bd304fbc92f3
+begin
+	@assert -A isa Residue
+	@assert A-B isa Residue
+	@assert zero(A) isa Residue
+	@assert A == A
+	@assert A != B
+	@assert A + zero(A) == A
+	@assert zero(A) - B == -B
+	@assert A - A == zero(A)
+	# @assert A + 3 == zero(A)
+	# @assert big(3) + A == zero(A)
+end
+
+# ╔═╡ d720bf29-9cf5-413a-ace7-faf222ecdfa0
+
+
+# ╔═╡ 5803916e-d67e-4208-9df7-19dd6fd8b965
+md"
+**Exercise 2**: Implement multiplicative structure on `Residues`, so that one can perform `A*B^-1` (or equivalently: `A*inv(B)`).
+"
+
+# ╔═╡ a6f30f1e-2f92-4f8f-aa48-bcf2233e9cf8
+
+
+# ╔═╡ 00000000-0000-0000-0000-000000000001
+PLUTO_PROJECT_TOML_CONTENTS = """
+[deps]
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+
+[compat]
+BenchmarkTools = "~1.3.1"
+"""
+
+# ╔═╡ 00000000-0000-0000-0000-000000000002
+PLUTO_MANIFEST_TOML_CONTENTS = """
+# This file is machine-generated - editing it directly is not advised
+
+julia_version = "1.7.2"
+manifest_format = "2.0"
+
+[[deps.Artifacts]]
+uuid = "56f22d72-fd6d-98f1-02f0-08ddc0907c33"
+
+[[deps.BenchmarkTools]]
+deps = ["JSON", "Logging", "Printf", "Profile", "Statistics", "UUIDs"]
+git-tree-sha1 = "4c10eee4af024676200bc7752e536f858c6b8f93"
+uuid = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+version = "1.3.1"
+
+[[deps.CompilerSupportLibraries_jll]]
+deps = ["Artifacts", "Libdl"]
+uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
+
+[[deps.Dates]]
+deps = ["Printf"]
+uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
+
+[[deps.JSON]]
+deps = ["Dates", "Mmap", "Parsers", "Unicode"]
+git-tree-sha1 = "3c837543ddb02250ef42f4738347454f95079d4e"
+uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+version = "0.21.3"
+
+[[deps.Libdl]]
+uuid = "8f399da3-3557-5675-b5ff-fb832c97cbdb"
+
+[[deps.LinearAlgebra]]
+deps = ["Libdl", "libblastrampoline_jll"]
+uuid = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+
+[[deps.Logging]]
+uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
+
+[[deps.Mmap]]
+uuid = "a63ad114-7e13-5084-954f-fe012c677804"
+
+[[deps.OpenBLAS_jll]]
+deps = ["Artifacts", "CompilerSupportLibraries_jll", "Libdl"]
+uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
+
+[[deps.Parsers]]
+deps = ["Dates"]
+git-tree-sha1 = "621f4f3b4977325b9128d5fae7a8b4829a0c2222"
+uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
+version = "2.2.4"
+
+[[deps.Printf]]
+deps = ["Unicode"]
+uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+
+[[deps.Profile]]
+deps = ["Printf"]
+uuid = "9abbd945-dff8-562f-b5e8-e1ebf5ef1b79"
+
+[[deps.Random]]
+deps = ["SHA", "Serialization"]
+uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+
+[[deps.SHA]]
+uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
+
+[[deps.Serialization]]
+uuid = "9e88b42a-f829-5b0c-bbe9-9e923198166b"
+
+[[deps.SparseArrays]]
+deps = ["LinearAlgebra", "Random"]
+uuid = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+
+[[deps.Statistics]]
+deps = ["LinearAlgebra", "SparseArrays"]
+uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+
+[[deps.UUIDs]]
+deps = ["Random", "SHA"]
+uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
+
+[[deps.Unicode]]
+uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
+
+[[deps.libblastrampoline_jll]]
+deps = ["Artifacts", "Libdl", "OpenBLAS_jll"]
+uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
+"""
+
+# ╔═╡ Cell order:
+# ╟─c728b133-37bc-41f6-8e88-1ca8df6a7a4f
+# ╟─bcf0e9dd-5261-4477-aa7b-3c27ea16180b
+# ╟─09789c5d-97af-45ab-baaf-92bd9ef63455
+# ╠═9d1b140e-bf36-11ec-3e35-3f278f1682c4
+# ╠═345c44c5-c0e3-4a5f-ba64-f60935f77bf7
+# ╟─2d7170eb-3201-483e-b951-86dffd327e2b
+# ╟─faa7705c-c044-46be-ba91-6b0adef24d4c
+# ╠═c1198833-3c4a-4106-8bbb-6534a917cd72
+# ╟─cdc234ea-e482-40bc-b4ef-7adfc8d38aca
+# ╠═688085ec-a8ed-4830-9081-2d1f6a6ab87f
+# ╟─ed74560c-e9a6-4e38-8efb-f51cc3eadab6
+# ╟─53167dd4-209d-4ecf-a0aa-54aca12fffd2
+# ╠═f7b322e5-cad7-41db-b391-c46844008f3d
+# ╠═bcf0dd01-28e3-4b06-8f11-c131a3526334
+# ╠═74d549ce-0783-49fa-a150-1763f06ecbfa
+# ╠═9b3dbb28-9f3a-421f-9f26-ea39642d3959
+# ╟─c9c11f7a-c0b5-4c72-9cfc-3b94a787a055
+# ╠═15ed6e94-4355-42a8-bad2-a53cd97cf290
+# ╟─36e5468a-a5dc-42cd-81b7-92b0447ca8e4
+# ╟─2d45fc43-ede5-4c05-837a-f96c17734550
+# ╠═8a69def3-afbe-4779-84fb-71a933f08975
+# ╟─a0542649-cbf2-4137-bb69-3fbef8fa2c98
+# ╠═c2c925c7-ce88-4f1c-94f7-19451eefd3e0
+# ╟─813e73fb-470c-47fc-940e-da03a105ca79
+# ╠═4e423cda-c448-4750-b420-a6982033b6f5
+# ╟─197bc9a4-2695-45bc-8ff2-b0cdd73b30e9
+# ╠═9394a38d-2e88-4c7b-bb5e-e78809a9a2f2
+# ╟─3fa1fa90-57ab-4a30-afdd-bfa0c866f3ef
+# ╠═9bfabb49-26b5-4182-b814-cfed9b74b2c7
+# ╟─ab914178-f909-44b0-811c-418f2d4939b3
+# ╟─7fd81fe1-c810-44ca-baa5-9d6a9555be74
+# ╠═4a4fba03-234e-465d-bc97-988e6e70ef69
+# ╟─4b2035f0-55e8-4f39-a6a7-e8882f493dfb
+# ╠═6343e1f3-4be0-4055-96a2-d39f828ab7e6
+# ╠═bb94fb21-7605-40e4-936a-f93e6a4c391b
+# ╟─cb141457-2671-4582-96ef-5c03d4d35814
+# ╠═4c1d0a58-08be-4966-9620-38c12589dd18
+# ╠═36f2f86a-42f5-4436-a9c5-bae68f39ed9e
+# ╠═0e73015f-0555-491a-ae62-44e7d4685e6f
+# ╠═96c924cb-3625-4f9b-92df-432902484815
+# ╠═02b25aea-2ad5-4463-8587-994c5c6c92b3
+# ╠═be731321-3972-41d3-bb70-7b56bde32d9a
+# ╠═23f1a09a-2b84-4b9b-b90c-c75a09195fa9
+# ╠═b686cf1a-6529-402c-a16c-df0feec66b53
+# ╠═58a09780-7776-4a79-95c3-266193c7e30a
+# ╠═3cd6308a-2293-4b9d-83a4-7748cc49fa54
+# ╠═ee30711a-9050-4ed3-9971-15ec679f0011
+# ╠═7e9eb4dc-972b-4d0d-a1c8-f4fef379ca19
+# ╠═6f221be1-1ab2-4f26-a4ad-f2c493c5e290
+# ╟─b275cf5f-846d-4487-9c5e-2ca9344bc807
+# ╠═3a2d237d-d924-4b2a-b767-26fb047c0886
+# ╠═cec7a620-9147-4afc-8948-80f91ffd1268
+# ╠═a7151ae1-6d68-45d0-8840-8b994ed9f734
+# ╠═6ecc64b2-dbfa-4ccd-a2aa-286417b7d8ba
+# ╠═504a5cc2-0d06-48a1-a805-2ed5d4bd6a70
+# ╠═3e50b42e-3ce4-4df2-a6cd-96a79cd09e2b
+# ╠═9bf248aa-7897-4104-94c5-195314dafb44
+# ╠═785ec286-280f-4ef7-81e5-1e80c750371c
+# ╠═6889507f-1964-4c89-b06c-e195a2484b7c
+# ╠═2d1f1731-381c-4501-a252-f4e34db8bac8
+# ╟─9ab2675c-d6a2-494e-847c-4a886a1166b6
+# ╠═1278b847-8dfc-4afc-b7bb-c7877f5fb828
+# ╠═e3612ed5-0e34-4b77-875e-a18294d307c9
+# ╠═4ffa197a-0d84-4b43-b926-4a83a8ecead7
+# ╟─ad18678d-4d69-4064-bcd8-2b4bc6c0c60a
+# ╠═518cafd6-edcc-4091-9a0a-afa3406311cb
+# ╠═99138265-89ed-4308-9d39-23e858dbcf89
+# ╠═14a7e4a1-f8de-4dc5-a59a-f4ad42fa066a
+# ╠═f55616a4-0fa4-4bf6-9eac-b8db35a34f28
+# ╠═cb796ae0-f79a-47c7-96a0-0c775fa59297
+# ╠═f82daca4-ec82-497c-975a-b1065ff30624
+# ╠═ebc06065-4ad0-4b9b-b4f3-cf326a40a697
+# ╟─0ba52767-a5f8-4517-9b84-7762281c3336
+# ╠═61cf408f-606d-4fd9-8b6d-b0c08425ee65
+# ╠═5cd9f85c-a4ba-454d-a480-f8734331cc84
+# ╟─dcc4aac6-8fbf-42bf-b171-abd48d625071
+# ╠═d8034870-dd0a-4dce-971c-a47a03f8ca89
+# ╟─f892452a-91b1-492e-89a9-17dcf7d85c5c
+# ╠═97ef8074-080a-490a-9d52-52b493fc29b2
+# ╠═1a4acfe8-9197-4f74-9223-4e06e088b427
+# ╟─ece7cc12-a1aa-40d6-b5ca-7622a701cc78
+# ╠═0e3beb19-a18a-456d-930f-1751c5e7814e
+# ╟─278017d0-ff3c-423d-a5ad-91bd82cb01cf
+# ╟─88b7647d-08bf-41aa-8a7d-5c9ad7df8157
+# ╠═4698766b-4a1d-4f6c-bbca-3f8d134f03f3
+# ╟─198ab65c-fb94-43bb-9813-c9b5c9787c1e
+# ╟─f96d145f-ec3b-45e0-9283-269d9da6575b
+# ╠═b9526249-0cb9-44e3-b161-a57cf29d621e
+# ╟─4b66abd4-0bac-40ee-80f6-59b56ee9ee1a
+# ╠═25d2f0f1-4dc2-4fb9-8eb9-af8563e31807
+# ╟─8ba6dfd6-4ff3-4a6b-b3c3-5b102d4932fc
+# ╠═43c57164-15f3-41c0-9ae5-19341f26500a
+# ╠═e9a8462f-8025-4853-8770-6f2f1bd15c69
+# ╠═661c703b-9523-41f4-8b1c-6ef6382fc7ba
+# ╠═d0da5232-2c25-430b-a888-2c0bc4395ea3
+# ╠═8e50e663-2c54-4b27-a5ef-a74f3cddf491
+# ╟─56ce9add-08b2-4637-aa2f-9decddad8c9f
+# ╠═7a1258ca-c981-462e-b6d1-4c7fb38bf63a
+# ╠═e97c27ff-6d26-4305-a671-359fcb012410
+# ╠═e4df1aa7-4112-4b80-9326-099a0abdd7ee
+# ╠═e837dcad-17d3-4935-9633-f6617b4867d3
+# ╟─7d7b95c1-b06c-46b8-9f5a-d863df1590a9
+# ╠═d8c5d154-5bf6-4380-bc82-65167e63e49f
+# ╠═bc51fe4d-d142-428f-9628-403eb5f3e1b2
+# ╠═b69f909b-2543-4c5c-9a0f-1de0e51b5aa9
+# ╟─2fc83333-7145-4a54-bc7c-b65f67d7ae74
+# ╠═58d9e95c-edc4-455f-9424-d0495e197492
+# ╠═8a449164-75f1-4fd8-948b-de596ceefc4f
+# ╠═65976f9d-566e-40d7-9817-99069c5fc738
+# ╟─f87cad11-a9c5-497d-a392-5cf07bb2a190
+# ╠═57dba8f7-e77a-4d91-8529-bd304fbc92f3
+# ╠═d720bf29-9cf5-413a-ace7-faf222ecdfa0
+# ╟─5803916e-d67e-4208-9df7-19dd6fd8b965
+# ╠═a6f30f1e-2f92-4f8f-aa48-bcf2233e9cf8
+# ╟─00000000-0000-0000-0000-000000000001
+# ╟─00000000-0000-0000-0000-000000000002

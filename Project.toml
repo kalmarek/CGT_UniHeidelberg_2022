@@ -1,2 +1,10 @@
+name = "CGT_UniHeidelberg_2022"
+uuid = "5e26e47c-5b2b-4152-8a90-bd29f6328eb5"
+authors = ["Marek Kaluba <marek.kaluba@kit.edu>"]
+version = "0.1.0"
+
 [deps]
 Pluto = "c3e4b0f8-55cb-11ea-2926-15256bba5781"
+
+[compat]
+Pluto = "0.19"

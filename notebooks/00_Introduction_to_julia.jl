@@ -4,7 +4,7 @@
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ 3cd6308a-2293-4b9d-83a4-7748cc49fa54
+# ╔═╡ f063d5f6-4040-4cfe-9647-fc3beac43214
 using BenchmarkTools
 
 # ╔═╡ c728b133-37bc-41f6-8e88-1ca8df6a7a4f
@@ -30,6 +30,12 @@ md"`julia` can be used as calculator. For example:"
 # ╔═╡ 345c44c5-c0e3-4a5f-ba64-f60935f77bf7
 sin(2)
 
+# ╔═╡ 5a8d9549-a75d-405d-afcd-9831e7e78113
+2^6
+
+# ╔═╡ 202566cf-75ad-4375-9bf7-713023952862
+
+
 # ╔═╡ 2d7170eb-3201-483e-b951-86dffd327e2b
 md"Are plenty of (arithmetic) operators (such as `+`, `-`, `*`, `^`, `/`, `//`, `%`, `div`, `rem`, ...) and functions (such as `sin`, `factorial`, etc.) already defined.
 For operators have a look at the beginning of the [section from julia manual](https://docs.julialang.org/en/v1/manual/mathematical-operations/). We will come back to functions later."
@@ -38,7 +44,7 @@ For operators have a look at the beginning of the [section from julia manual](ht
 md"We can also define variables by simply assign value to a name:"
 
 # ╔═╡ c1198833-3c4a-4106-8bbb-6534a917cd72
-x = 2*π
+x = 2π
 
 # ╔═╡ cdc234ea-e482-40bc-b4ef-7adfc8d38aca
 md"and access the value assigned to a name somewhere else:"
@@ -61,7 +67,7 @@ z = 1.2
 z == 1.2
 
 # ╔═╡ 74d549ce-0783-49fa-a150-1763f06ecbfa
-y = 1.3
+y = 1.1
 
 # ╔═╡ 9b3dbb28-9f3a-421f-9f26-ea39642d3959
 y == z
@@ -70,11 +76,17 @@ y == z
 md"Those `true` and `false` (so called `Booleans`) can be used in _conditional_ statements such as"
 
 # ╔═╡ 15ed6e94-4355-42a8-bad2-a53cd97cf290
-if y == z
+sss = if y == z
     "In the castle of Aaaaargh..."
 else
 	"Where is it? Behind the rabbit?"
 end
+
+# ╔═╡ 75d20084-3b43-4124-a2aa-e9abf35c91fc
+y == z ? error("aaa") : 2
+
+# ╔═╡ 8c7c7a38-accd-4dca-9e61-299db82f3b8d
+ifelse(y == z, "a", "b")
 
 # ╔═╡ 36e5468a-a5dc-42cd-81b7-92b0447ca8e4
 md"As you can see `if` block may contain `else` clause (or several `elseif` ones) and is finished by `end`. In general it looks like this:
@@ -104,6 +116,9 @@ Can you guess what does the following code do?
 # ╔═╡ a0542649-cbf2-4137-bb69-3fbef8fa2c98
 md"This is so called `for` loop where we iterate over consecutive natural numbers from `1` to `5` and sum them together. We could much simpler express it as `sum(1:5)`:"
 
+# ╔═╡ f57003d0-5066-4583-9454-2398cf7855cc
+supertypes(typeof(1:5))
+
 # ╔═╡ c2c925c7-ce88-4f1c-94f7-19451eefd3e0
 sum(1:5)
 
@@ -117,6 +132,9 @@ creates an array (a list) of squares of integers from `5` to `15`. Let's observe
 # ╔═╡ 4e423cda-c448-4750-b420-a6982033b6f5
 [x^2 for x in 5:15]
 
+# ╔═╡ ad381ecb-c9fa-463b-9f69-f23e629e459b
+map(x->x^2, 5:15)
+
 # ╔═╡ 197bc9a4-2695-45bc-8ff2-b0cdd73b30e9
 md"such iteration can have plenty of variables and contain conditional statements as well. For example this code:
 ```julia
@@ -128,6 +146,12 @@ We could even (very poorly) approximate π with it!
 
 # ╔═╡ 3fa1fa90-57ab-4a30-afdd-bfa0c866f3ef
 md"We make a major performance blunder, of course, since we don't need to create all of those points when we just need to count them... but that's a story for another time."
+
+# ╔═╡ 83dee27b-1c40-4a2d-a204-ffe1effd56d9
+count([true for _ in 1:5])
+
+# ╔═╡ 94d38118-94ec-43fc-8a16-6fc562bcdeaa
+(x < 5 for x in 3:7)
 
 # ╔═╡ ab914178-f909-44b0-811c-418f2d4939b3
 md"Iteration is an important concept and one of the major tasks in the first part of the course will be to efficiently iterate (without repetitions) over all elements of a permutation group."
@@ -159,6 +183,9 @@ You could define `h = x -> sin(x*π)` and then ask for `h(2)` but the most popul
 # ╔═╡ 4a4fba03-234e-465d-bc97-988e6e70ef69
 sum(x->x^2, 1:5) # function sum accepts also a function as the first argument
 
+# ╔═╡ ce49d466-4c05-45bd-88c6-3f0694c873ef
+count(==(5), 3:7)
+
 # ╔═╡ 4b2035f0-55e8-4f39-a6a7-e8882f493dfb
 md"
 Remember the approximation of `pi` with `let` block? 
@@ -171,6 +198,9 @@ end
 Let's turn it into a function!
 "
 
+# ╔═╡ 2fa1d1d2-9fd7-4011-8eb0-6ef985bad9df
+@code_native debuginfo=:none sum(rand(1000))
+
 # ╔═╡ cb141457-2671-4582-96ef-5c03d4d35814
 md"
 ## Recursive functions
@@ -180,18 +210,6 @@ Let us have a look at a more complicated function: the one computing Fibbonachi 
 * ``Fib(n) = Fib(n-1) + Fib(n-2)``
 How can we achieve that with julia?
 "
-
-# ╔═╡ 23f1a09a-2b84-4b9b-b90c-c75a09195fa9
-
-
-# ╔═╡ b686cf1a-6529-402c-a16c-df0feec66b53
-
-
-# ╔═╡ 58a09780-7776-4a79-95c3-266193c7e30a
-
-
-# ╔═╡ 7e9eb4dc-972b-4d0d-a1c8-f4fef379ca19
-
 
 # ╔═╡ 6f221be1-1ab2-4f26-a4ad-f2c493c5e290
 
@@ -207,6 +225,9 @@ typeof(2)
 # ╔═╡ cec7a620-9147-4afc-8948-80f91ffd1268
 typeof(2.0)
 
+# ╔═╡ 3de5ea6b-8072-49b5-a504-98a75992b49f
+supertypes(Float64)
+
 # ╔═╡ a7151ae1-6d68-45d0-8840-8b994ed9f734
 typeof("2.0")
 
@@ -217,7 +238,7 @@ typeof(2^50)
 2^62 
 
 # ╔═╡ 3e50b42e-3ce4-4df2-a6cd-96a79cd09e2b
-2^63 # surprised?
+2^64 # surprised?
 
 # ╔═╡ 9bf248aa-7897-4104-94c5-195314dafb44
 bitstring(2)
@@ -226,7 +247,7 @@ bitstring(2)
 bitstring(2^62)
 
 # ╔═╡ 6889507f-1964-4c89-b06c-e195a2484b7c
-bitstring(2^63)
+bitstring(2^64)
 
 # ╔═╡ 2d1f1731-381c-4501-a252-f4e34db8bac8
 bitstring(-1)
@@ -244,6 +265,11 @@ typeof(big(2))
 
 # ╔═╡ e3612ed5-0e34-4b77-875e-a18294d307c9
 (big(2)^63)
+
+# ╔═╡ e7bc6eab-727c-4ab8-83c2-357d89ce225e
+let z = 9223372036854775808
+	typeof(z)
+end
 
 # ╔═╡ ad18678d-4d69-4064-bcd8-2b4bc6c0c60a
 md"
@@ -270,6 +296,9 @@ md"
 Talking about types brings us to one of the core concepts of `julia`: function methods. Each function in julia has associates (multiple) _methods_ to it. For example:
 "
 
+# ╔═╡ 6d00aa9e-3fdb-4c3f-b4d2-6c78e719ec32
+function without_methods end
+
 # ╔═╡ f82daca4-ec82-497c-975a-b1065ff30624
 length([1,2,3])
 
@@ -283,6 +312,9 @@ The same function `lenght` has been used in two different contexts (on a `Vector
 
 # ╔═╡ 61cf408f-606d-4fd9-8b6d-b0c08425ee65
 @which length([1,2,3])
+
+# ╔═╡ 9409b4e4-607e-4739-a0fb-f2d0d18dade4
+
 
 # ╔═╡ 5cd9f85c-a4ba-454d-a480-f8734331cc84
 @which length("qwerty")
@@ -306,9 +338,6 @@ We will soon learn how to add another methods for e.g. `length` (which will be n
 # ╔═╡ 97ef8074-080a-490a-9d52-52b493fc29b2
 my_function(x::Int) = 3*x
 
-# ╔═╡ 1a4acfe8-9197-4f74-9223-4e06e088b427
-my_function(5)
-
 # ╔═╡ ece7cc12-a1aa-40d6-b5ca-7622a701cc78
 md"
 What will happen if we call `my_function` with `5.0`?
@@ -326,7 +355,7 @@ Well `julia` is is helpless here because we **haven't told it** what `my_functio
 "
 
 # ╔═╡ 0e3beb19-a18a-456d-930f-1751c5e7814e
-# my_function(x::Float64) = 2*x
+my_function(x::Float64) = 2*x
 
 # ╔═╡ 278017d0-ff3c-423d-a5ad-91bd82cb01cf
 md"
@@ -358,6 +387,21 @@ my_function(x::Integer) = 3*x
 ```
 which will work for all subtypes of `Integer` (even the ones we haven't seen!).
 "
+
+# ╔═╡ b148ce7c-1cee-4909-84a2-3f004b411c11
+my_function(x::Integer) = 3*x
+
+# ╔═╡ 97ad8ed6-313a-4ebc-b5e5-3e01a82e05e7
+my_function(x::Real) = 2*x
+
+# ╔═╡ 1a4acfe8-9197-4f74-9223-4e06e088b427
+my_function(5)
+
+# ╔═╡ 0b84de51-063f-4ed9-9f44-d654720f4ab5
+my_function(5.0)
+
+# ╔═╡ b5905ff1-f363-417c-a1c4-52b3d2e7c627
+my_function(3//2)
 
 # ╔═╡ 88b7647d-08bf-41aa-8a7d-5c9ad7df8157
 md"
@@ -491,11 +535,11 @@ function Base.:+(x::Residue, y::Residue)
 end
 
 # ╔═╡ 9d1b140e-bf36-11ec-3e35-3f278f1682c4
-2 + 2 * 2
+2 + 2 * 3
 
 # ╔═╡ 8a69def3-afbe-4779-84fb-71a933f08975
 begin
-	s = 0
+	local s = 0
 	for i in 1:5
 		s += i
 	end
@@ -504,8 +548,16 @@ end
 
 # ╔═╡ 9394a38d-2e88-4c7b-bb5e-e78809a9a2f2
 let R = 1000
-	length([(x,y) for x in -R:R for y in -R:R if x^2 + y^2 <= R^2])/R^2
+	@time length([(x,y) for x in -R:R for y in -R:R if x^2 + y^2 <= R^2])/R^2
 end
+
+# ╔═╡ b7cada51-0bbe-4917-8407-3ca64cec74ac
+function approx_π(R)
+	return length([(x,y) for x in -R:R for y in -R:R if x^2 + y^2 <= R^2])/R^2
+end
+
+# ╔═╡ 488819ef-1c10-4764-86ca-6fbeb93b5fdb
+@time approx_π(1000)
 
 # ╔═╡ 9bfabb49-26b5-4182-b814-cfed9b74b2c7
 let R = 1000
@@ -520,8 +572,47 @@ function approximate_π(R)
 end
 
 # ╔═╡ bb94fb21-7605-40e4-936a-f93e6a4c391b
-approximate_π(1_000)
+@time approximate_π(1_000)
 # in literals numbers one can add underscores to make them more readable
+
+# ╔═╡ 09fa8914-7966-40f7-98eb-86aa43658908
+@code_native debuginfo=:none approximate_π(100)
+
+# ╔═╡ 785f0db0-7727-4897-8e33-228e6994fc65
+function my_sum(x::AbstractVector{T}) where T
+	s = zero(T)
+	for i in eachindex(x)
+		s += x[i]
+	end
+	return s
+end
+
+# ╔═╡ db88a531-98be-4c03-abb7-fb198e8721aa
+let xxx = rand(1000)
+	@benchmark my_sum($xxx)
+end
+
+# ╔═╡ d21b17c0-ed26-4f12-b911-bffdd1f10e15
+function my_sum_avx(x::AbstractVector{T}) where T
+	s = zero(T)
+	@inbounds @simd for i in 1:length(x)
+		s += x[i]
+	end
+	return s
+end
+
+# ╔═╡ 3a692972-92cb-42fd-85dc-445e65fdbf92
+let xxx = rand(1000)
+	@benchmark my_sum_avx($xxx)
+end
+
+# ╔═╡ b2b8522b-0fbb-4f2b-8ca3-526e05a1be2f
+let xxx = rand(1000)
+	@benchmark my_sum_avx($xxx)
+end
+
+# ╔═╡ 1598f7d2-0bea-448e-82b1-f30c33dd7f2f
+@code_native debuginfo=:none my_sum_avx(rand(1000))
 
 # ╔═╡ 4c1d0a58-08be-4966-9620-38c12589dd18
 function Fib1(n)
@@ -538,10 +629,7 @@ end
 [Fib1(n) for n in 0:10]
 
 # ╔═╡ 0e73015f-0555-491a-ae62-44e7d4685e6f
-# ╠═╡ disabled = true
-#=╠═╡
 Fib1(43)
-  ╠═╡ =#
 
 # ╔═╡ 96c924cb-3625-4f9b-92df-432902484815
 function Fib2(n)
@@ -569,7 +657,10 @@ end
 Fib2(43)
 
 # ╔═╡ ee30711a-9050-4ed3-9971-15ec679f0011
-@benchmark Fib2(1000000)
+@benchmark Fib2(1_000)
+
+# ╔═╡ 7e9eb4dc-972b-4d0d-a1c8-f4fef379ca19
+@elapsed Fib2(10000)
 
 # ╔═╡ 4ffa197a-0d84-4b43-b926-4a83a8ecead7
 (big(2)^63)÷2 + 2^62
@@ -587,9 +678,9 @@ To complete the arithmetic we would need to implement
 * zero element in the form `Base.zero(x::Residue)`
 * equality check in the form `Base.:(==)(x::Residue, y::Residue)
 
-**Exercise 1**: 
- * Complete those definitions so that the cell below doesn't throw any error.
- * what method needs to be implemented so that `@assert A + 3 == zero(A)` also holds?
+> **Exercise 1**: 
+> * Complete those definitions so that the cell below doesn't throw any error.
+> * what method needs to be implemented so that `@assert A + 3 == zero(A)` also holds?
 "
 
 # ╔═╡ 57dba8f7-e77a-4d91-8529-bd304fbc92f3
@@ -611,7 +702,7 @@ end
 
 # ╔═╡ 5803916e-d67e-4208-9df7-19dd6fd8b965
 md"
-**Exercise 2**: Implement multiplicative structure on `Residues`, so that one can perform `A*B^-1` (or equivalently: `A*inv(B)`).
+> **Exercise 2**: Implement multiplicative structure on `Residues`, so that one can perform `A*B^-1` (or equivalently: `A*inv(B)`).
 "
 
 # ╔═╡ a6f30f1e-2f92-4f8f-aa48-bcf2233e9cf8
@@ -675,9 +766,9 @@ uuid = "4536629a-c528-5b80-bd46-f80d51c5b363"
 
 [[deps.Parsers]]
 deps = ["Dates"]
-git-tree-sha1 = "621f4f3b4977325b9128d5fae7a8b4829a0c2222"
+git-tree-sha1 = "1285416549ccfcdf0c50d4997a94331e88d68413"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "2.2.4"
+version = "2.3.1"
 
 [[deps.Printf]]
 deps = ["Unicode"]
@@ -723,6 +814,8 @@ uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
 # ╟─09789c5d-97af-45ab-baaf-92bd9ef63455
 # ╠═9d1b140e-bf36-11ec-3e35-3f278f1682c4
 # ╠═345c44c5-c0e3-4a5f-ba64-f60935f77bf7
+# ╠═5a8d9549-a75d-405d-afcd-9831e7e78113
+# ╠═202566cf-75ad-4375-9bf7-713023952862
 # ╟─2d7170eb-3201-483e-b951-86dffd327e2b
 # ╟─faa7705c-c044-46be-ba91-6b0adef24d4c
 # ╠═c1198833-3c4a-4106-8bbb-6534a917cd72
@@ -736,23 +829,41 @@ uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
 # ╠═9b3dbb28-9f3a-421f-9f26-ea39642d3959
 # ╟─c9c11f7a-c0b5-4c72-9cfc-3b94a787a055
 # ╠═15ed6e94-4355-42a8-bad2-a53cd97cf290
+# ╠═75d20084-3b43-4124-a2aa-e9abf35c91fc
+# ╠═8c7c7a38-accd-4dca-9e61-299db82f3b8d
 # ╟─36e5468a-a5dc-42cd-81b7-92b0447ca8e4
 # ╟─2d45fc43-ede5-4c05-837a-f96c17734550
 # ╠═8a69def3-afbe-4779-84fb-71a933f08975
 # ╟─a0542649-cbf2-4137-bb69-3fbef8fa2c98
+# ╠═f57003d0-5066-4583-9454-2398cf7855cc
 # ╠═c2c925c7-ce88-4f1c-94f7-19451eefd3e0
 # ╟─813e73fb-470c-47fc-940e-da03a105ca79
 # ╠═4e423cda-c448-4750-b420-a6982033b6f5
+# ╠═ad381ecb-c9fa-463b-9f69-f23e629e459b
 # ╟─197bc9a4-2695-45bc-8ff2-b0cdd73b30e9
 # ╠═9394a38d-2e88-4c7b-bb5e-e78809a9a2f2
+# ╠═b7cada51-0bbe-4917-8407-3ca64cec74ac
+# ╠═488819ef-1c10-4764-86ca-6fbeb93b5fdb
 # ╟─3fa1fa90-57ab-4a30-afdd-bfa0c866f3ef
+# ╠═83dee27b-1c40-4a2d-a204-ffe1effd56d9
+# ╠═94d38118-94ec-43fc-8a16-6fc562bcdeaa
 # ╠═9bfabb49-26b5-4182-b814-cfed9b74b2c7
 # ╟─ab914178-f909-44b0-811c-418f2d4939b3
 # ╟─7fd81fe1-c810-44ca-baa5-9d6a9555be74
 # ╠═4a4fba03-234e-465d-bc97-988e6e70ef69
+# ╠═ce49d466-4c05-45bd-88c6-3f0694c873ef
 # ╟─4b2035f0-55e8-4f39-a6a7-e8882f493dfb
 # ╠═6343e1f3-4be0-4055-96a2-d39f828ab7e6
 # ╠═bb94fb21-7605-40e4-936a-f93e6a4c391b
+# ╠═09fa8914-7966-40f7-98eb-86aa43658908
+# ╠═785f0db0-7727-4897-8e33-228e6994fc65
+# ╠═d21b17c0-ed26-4f12-b911-bffdd1f10e15
+# ╠═f063d5f6-4040-4cfe-9647-fc3beac43214
+# ╠═db88a531-98be-4c03-abb7-fb198e8721aa
+# ╠═3a692972-92cb-42fd-85dc-445e65fdbf92
+# ╠═b2b8522b-0fbb-4f2b-8ca3-526e05a1be2f
+# ╠═1598f7d2-0bea-448e-82b1-f30c33dd7f2f
+# ╠═2fa1d1d2-9fd7-4011-8eb0-6ef985bad9df
 # ╟─cb141457-2671-4582-96ef-5c03d4d35814
 # ╠═4c1d0a58-08be-4966-9620-38c12589dd18
 # ╠═36f2f86a-42f5-4436-a9c5-bae68f39ed9e
@@ -760,16 +871,13 @@ uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
 # ╠═96c924cb-3625-4f9b-92df-432902484815
 # ╠═02b25aea-2ad5-4463-8587-994c5c6c92b3
 # ╠═be731321-3972-41d3-bb70-7b56bde32d9a
-# ╠═23f1a09a-2b84-4b9b-b90c-c75a09195fa9
-# ╠═b686cf1a-6529-402c-a16c-df0feec66b53
-# ╠═58a09780-7776-4a79-95c3-266193c7e30a
-# ╠═3cd6308a-2293-4b9d-83a4-7748cc49fa54
 # ╠═ee30711a-9050-4ed3-9971-15ec679f0011
 # ╠═7e9eb4dc-972b-4d0d-a1c8-f4fef379ca19
 # ╠═6f221be1-1ab2-4f26-a4ad-f2c493c5e290
 # ╟─b275cf5f-846d-4487-9c5e-2ca9344bc807
 # ╠═3a2d237d-d924-4b2a-b767-26fb047c0886
 # ╠═cec7a620-9147-4afc-8948-80f91ffd1268
+# ╠═3de5ea6b-8072-49b5-a504-98a75992b49f
 # ╠═a7151ae1-6d68-45d0-8840-8b994ed9f734
 # ╠═6ecc64b2-dbfa-4ccd-a2aa-286417b7d8ba
 # ╠═504a5cc2-0d06-48a1-a805-2ed5d4bd6a70
@@ -782,16 +890,19 @@ uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
 # ╠═1278b847-8dfc-4afc-b7bb-c7877f5fb828
 # ╠═e3612ed5-0e34-4b77-875e-a18294d307c9
 # ╠═4ffa197a-0d84-4b43-b926-4a83a8ecead7
+# ╠═e7bc6eab-727c-4ab8-83c2-357d89ce225e
 # ╟─ad18678d-4d69-4064-bcd8-2b4bc6c0c60a
 # ╠═518cafd6-edcc-4091-9a0a-afa3406311cb
 # ╠═99138265-89ed-4308-9d39-23e858dbcf89
 # ╠═14a7e4a1-f8de-4dc5-a59a-f4ad42fa066a
 # ╠═f55616a4-0fa4-4bf6-9eac-b8db35a34f28
-# ╠═cb796ae0-f79a-47c7-96a0-0c775fa59297
+# ╟─cb796ae0-f79a-47c7-96a0-0c775fa59297
+# ╠═6d00aa9e-3fdb-4c3f-b4d2-6c78e719ec32
 # ╠═f82daca4-ec82-497c-975a-b1065ff30624
 # ╠═ebc06065-4ad0-4b9b-b4f3-cf326a40a697
 # ╟─0ba52767-a5f8-4517-9b84-7762281c3336
 # ╠═61cf408f-606d-4fd9-8b6d-b0c08425ee65
+# ╠═9409b4e4-607e-4739-a0fb-f2d0d18dade4
 # ╠═5cd9f85c-a4ba-454d-a480-f8734331cc84
 # ╟─dcc4aac6-8fbf-42bf-b171-abd48d625071
 # ╠═d8034870-dd0a-4dce-971c-a47a03f8ca89
@@ -799,8 +910,12 @@ uuid = "8e850b90-86db-534c-a0d3-1478176c7d93"
 # ╠═97ef8074-080a-490a-9d52-52b493fc29b2
 # ╠═1a4acfe8-9197-4f74-9223-4e06e088b427
 # ╟─ece7cc12-a1aa-40d6-b5ca-7622a701cc78
+# ╠═0b84de51-063f-4ed9-9f44-d654720f4ab5
 # ╠═0e3beb19-a18a-456d-930f-1751c5e7814e
 # ╟─278017d0-ff3c-423d-a5ad-91bd82cb01cf
+# ╠═b148ce7c-1cee-4909-84a2-3f004b411c11
+# ╠═97ad8ed6-313a-4ebc-b5e5-3e01a82e05e7
+# ╠═b5905ff1-f363-417c-a1c4-52b3d2e7c627
 # ╟─88b7647d-08bf-41aa-8a7d-5c9ad7df8157
 # ╠═4698766b-4a1d-4f6c-bbca-3f8d134f03f3
 # ╟─198ab65c-fb94-43bb-9813-c9b5c9787c1e

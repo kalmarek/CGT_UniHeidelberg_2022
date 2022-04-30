@@ -54,3 +54,28 @@ end
     @test sprint(show, ρ*ρ) == "(1,3)(2,4)"
 end
 
+@testset "Permutations (deserialization)" begin
+    import CGT_UniHeidelberg_2022: Permutation
+
+    # Identity
+    @test Permutation(Int[]) == perm"(1)"
+
+    # Transpositions
+    @test Permutation([1,2]) == perm"(1,2)"
+    @test Permutation([1,3,2]) == perm"(1,2)(2,3)"
+
+    # Cycles k>=3
+    @test Permutation([2,3,1,5,4]) == perm"(2,3,1)(4,5)"
+    # TODO: add some uneven permutations
+
+    # Invalid input
+    @test_throws Meta.ParseError perm"(1,)"
+    @test_throws Meta.ParseError perm"(,2)"
+    @test_throws Meta.ParseError perm"" # whether this should parse the identity or return an error is up for interpretation
+    @test_throws Meta.ParseError perm"()"
+    @test_throws Meta.ParseError perm"(1,2"
+    @test_throws Meta.ParseError perm"2,1)"
+    @test_throws Meta.ParseError perm"2"
+    @test_throws Meta.ParseError perm"2;1"
+    @test_throws Meta.ParseError perm"(2,3,1)⋅(4,5)" # this or (2,3,1)∗(4,5) is arguably also a valid case
+end

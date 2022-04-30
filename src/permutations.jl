@@ -114,4 +114,136 @@ function cycle_decomposition(σ::CyclePermutation)
     return σ.cycles
 end
 
+
+""" Exercise 2
+Parse permutations from a string, with cycles delimited by braces.
+Cycles are not required to be disjoint.
+"""
+# Easy way: use a perl-compatible regex with `eachmatch`. The problem
+# with the function below is that no kind of error checking is done -
+# whatever matches a valid cycle is returned. Turning the cycles into an
+# expression can be done in the same way as `Meta.parse` does below.
+function string_to_cycles(str::AbstractString)
+    cycles = Vector{Vector{Int}}(undef, 0)
+
+    for m in eachmatch(r"\(\d+(?:,\d+)*\)", str)
+        str_cycle = m.match
+        current_cycle = Int[]
+
+        for m_num in eachmatch(r"\d+(?=[,\)])", str_cycle)
+            num = tryparse(Int, m_num.match)
+            @assert !isnothing(num)
+            push!(current_cycle, num)
+        end
+        push!(cycles, copy(current_cycle))
+    end
+    return cycles
+end
+export string_to_cycles
+
+# Hard way: implement a FSM by hand. Has detailed error messages for
+# wrong inputs.
+# XXX: this makes no specific assumptions on the implementation of
+# AbstractPermutation, but using ::Type{P} ... where
+# P<:AbstractPermutation results in `UndefVarError: P not defined`.
+function Meta.parse(::Type{Permutation}, str::AbstractString)
+    in_cycle, in_number = false, false
+    cycles = Vector{Vector{Int}}(undef, 0)
+    current_cycle = Int[]
+    current_num_str = ""
+
+    for c in str # process string character by character
+        if in_cycle == false && c != '('
+            throw(Meta.ParseError("cycle must begin in a brace"))
+
+        elseif c == '('
+            in_cycle = true
+            continue
+
+        elseif in_number            
+            if c == ')' || c == ','
+                # substring of integers complete
+                in_number = false
+                num = tryparse(Int, current_num_str)
+                @assert !isnothing(num) "Internal parser error"
+                # println(current_num_str)
+                push!(current_cycle, num)
+                # println(current_cycle)
+                current_num_str = ""
+            end
+
+            if c == ','
+                continue
+            elseif c == ')'
+                # cycle complete, push if length >= 2
+                if length(current_cycle) >= 2
+                    push!(cycles, copy(current_cycle))
+                end
+                empty!(current_cycle)
+                in_cycle = false
+                # println(cycles)
+                continue
+            end
+
+        elseif c == ',' && in_number == false
+            throw(Meta.ParseError("separator has no preceding number"))
+
+        elseif c == ')' && in_number == false
+            throw(Meta.ParseError("terminator has no preceding number"))
+        end
+
+        if isdigit(c)
+            in_number = true
+            current_num_str *= c # concatenate to current string
+            continue
+        else
+            throw(Meta.ParseError("numbers must be comma-separated"))
+        end
+    end
+
+    if in_cycle == true
+        throw(Meta.ParseError("cycle is unterminated"))
+    end
+
+    # Turn cycles into an expression
+    if length(cycles) == 0
+        return :(Permutation(Int[]))
+    end
+
+    # One way to represent a product of cycles as a Julia expression is
+    # to convert each term to a Permutation (converting cycles to
+    # images), and combining the expressions with '*'. In this way,
+    # there are no assumptions on the implementation of '*' (which could
+    # be either acting from the right, or the left).
+    v = cycle_to_images(cycles[1])
+    Π = :(Permutation($v)) # string interpolation
+
+    for i ∈ range(2, length(cycles))
+        v = cycle_to_images(cycles[i])
+        Π = Expr(:call, :*, Π, :(Permutation($v)))
+    end
+    return Π
+end
+
+function cycle_to_images(cycle::Vector{Int})
+    deg = max(cycle...)
+    images = collect(1:deg)
+
+    for k in range(1, length(cycle))
+        i = cycle[k]
+        if k < length(cycle)
+            images[i] = cycle[k+1]
+        else
+            images[i] = cycle[1]
+        end
+    end
+    return images
+end
+export cycle_to_images
+
+macro perm_str(str)
+    return eval(Meta.parse(Permutation, str))
+end
+export @perm_str
+
 # end # of Permutations

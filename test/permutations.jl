@@ -24,3 +24,33 @@
     @test sprint(show, ρ) == "(1,2,3,4)"
     @test sprint(show, ρ*ρ) == "(1,3)(2,4)"
 end
+
+# TODO: The only change here is the type, could the testset be templatized?
+# (cf. TEMPLATE_TEST_CASE in Catch2)
+@testset "CyclePermutations" begin
+    import CGT_UniHeidelberg_2022: CyclePermutation, degree, orbit_plain
+
+    σ = CyclePermutation([2,1,3])
+    τ = CyclePermutation([1,3,2])
+
+    @test inv(one(σ)) == one(σ)
+    @test inv(σ)*σ == one(σ)
+    @test τ*inv(τ) == one(τ)
+    @test inv(σ*τ) == inv(τ)*inv(σ)
+    # (1,2)·(2,3) == (1,3,2)
+    @test σ*τ == CyclePermutation([3,1,2])
+
+    @test degree(σ) == 2
+    @test degree(τ) == 3
+    @test degree(one(σ)) == 1
+
+    @test orbit_plain(1, [CyclePermutation([2,3,4,1])]) == [1,2,3,4]
+
+    @test sprint(show, σ) == "(1,2)"
+    @test sprint(show, τ) == "(2,3)"
+    @test sprint(show, one(σ)) == "()"
+    ρ = CyclePermutation([2,3,4,1])
+    @test sprint(show, ρ) == "(1,2,3,4)"
+    @test sprint(show, ρ*ρ) == "(1,3)(2,4)"
+end
+

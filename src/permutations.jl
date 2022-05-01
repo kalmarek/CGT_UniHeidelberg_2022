@@ -1,7 +1,9 @@
-#module Permutation
 # included from CGT_UniHeidelberg_2022.jl
 
-#export Permutation, CyclicPermutation
+export Permutation, CyclePermutation, degree, cycle_decomposition
+
+import ..degree
+import ..cycle_decomposition
 
 """ Exercise #1
 `Permutation` as implementation of abstract type `AbstractPermutation`.
@@ -34,8 +36,6 @@ function degree(σ::Permutation)
     end
     return 1
 end
-export degree
-
 
 """ Exercise #1
 Create struct `CyclePermutation <: AbstractPermutation` that stores
@@ -59,10 +59,10 @@ struct CyclePermutation <: AbstractPermutation
     # sorted, so this would result in O(N) complexity.
     images::Vector{Int}
 
-    function Permutation(v::AbstractVector{<:Integer}, check=true)
+    function CyclePermutation(v::AbstractVector{<:Integer}, check=true)
         # Construct temporary Permutation for cycle decomposition
         σ = Permutation(v, check)
-        c = cycle_decomposition(σ)
+        cycles = cycle_decomposition(σ)
 
         # We assume that `cycle_decomposition()` returns a product of
         # disjoint cycles. The implementation in `AbstractPermutations`
@@ -75,7 +75,7 @@ struct CyclePermutation <: AbstractPermutation
             end
             @assert allunique(σ_cat) "σ is not a decomposition in disjoint cycles"
         end
-        new(c, σ) # inner constructor method
+        new(cycles, σ.images) # inner constructor method
     end
 end
 
@@ -99,13 +99,12 @@ function degree(σ::CyclePermutation)
     # and again take the maximum over these cycles for the degree.
     deg = 1
     for c ∈ σ.cycles
-        if max(c) > deg
-            deg = max(c)
+        if max(c...) > deg
+            deg = max(c...)
         end
     end
     return deg
 end
-export degree
 
 # `cycle_decomposition()` can be specialized for `CyclePermutation`, in
 # the sense that the operation becomes trivial (the decomposition is
@@ -114,6 +113,5 @@ export degree
 function cycle_decomposition(σ::CyclePermutation)
     return σ.cycles
 end
-export cycle_decomposition
 
-# end # of Permutation
+# end # of Permutations

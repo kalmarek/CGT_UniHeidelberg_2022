@@ -122,9 +122,8 @@ Cycles are not required to be disjoint.
 # Easy way: use a perl-compatible regex with `eachmatch`. Input
 # validation is done by concatenating each match, and checking if the
 # original string is recovered. However, only a generic error message is
-# returned on invalid input. Turning the cycles into an expression can
-# be done in the same way as `Meta.parse` does below.
-function string_to_cycles(str::AbstractString)
+# returned on invalid input.
+function string_to_cycles_regexp(str::AbstractString)
     cycles = Vector{Vector{Int}}(undef, 0)
     str_reconstructed = ""
 
@@ -147,14 +146,11 @@ function string_to_cycles(str::AbstractString)
     end
     return cycles
 end
-export string_to_cycles
+export string_to_cycles_regexp
 
 # Hard way: implement a FSM by hand. Has detailed error messages for
 # wrong inputs.
-# XXX: this makes no specific assumptions on the implementation of
-# AbstractPermutation, but using ::Type{P} ... where
-# P<:AbstractPermutation results in `UndefVarError: P not defined`.
-function Meta.parse(::Type{Permutation}, str::AbstractString)
+function string_to_cycles(str::AbstractString)
     in_cycle, in_number = false, false
     cycles = Vector{Vector{Int}}(undef, 0)
     current_cycle = Int[]
@@ -212,8 +208,16 @@ function Meta.parse(::Type{Permutation}, str::AbstractString)
     if in_cycle == true
         throw(Meta.ParseError("cycle is unterminated"))
     end
+    return cycles
+end
+export string_to_cycles
 
-    # Turn cycles into an expression
+# Turn cycles into an expression
+# XXX: this makes no specific assumptions on the implementation of
+# AbstractPermutation, but using ::Type{P} ... where
+# P<:AbstractPermutation results in `UndefVarError: P not defined`.
+function Meta.parse(::Type{Permutation}, str::AbstractString)
+    cycles = string_to_cycles(str)
     if length(cycles) == 0
         return :(Permutation(Int[]))
     end

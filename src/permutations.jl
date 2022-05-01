@@ -1,6 +1,7 @@
 # included from CGT_UniHeidelberg_2022.jl
 
 export Permutation, CyclePermutation, degree, cycle_decomposition
+export string_to_cycles, string_to_cycles_regexp
 
 import ..degree
 import ..cycle_decomposition
@@ -146,7 +147,6 @@ function string_to_cycles_regexp(str::AbstractString)
     end
     return cycles
 end
-export string_to_cycles_regexp
 
 # Hard way: implement a FSM by hand. Has detailed error messages for
 # wrong inputs.
@@ -210,7 +210,6 @@ function string_to_cycles(str::AbstractString)
     end
     return cycles
 end
-export string_to_cycles
 
 # Turn cycles into an expression
 # XXX: this makes no specific assumptions on the implementation of

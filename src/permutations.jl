@@ -119,15 +119,18 @@ end
 Parse permutations from a string, with cycles delimited by braces.
 Cycles are not required to be disjoint.
 """
-# Easy way: use a perl-compatible regex with `eachmatch`. The problem
-# with the function below is that no kind of error checking is done -
-# whatever matches a valid cycle is returned. Turning the cycles into an
-# expression can be done in the same way as `Meta.parse` does below.
+# Easy way: use a perl-compatible regex with `eachmatch`. Input
+# validation is done by concatenating each match, and checking if the
+# original string is recovered. However, only a generic error message is
+# returned on invalid input. Turning the cycles into an expression can
+# be done in the same way as `Meta.parse` does below.
 function string_to_cycles(str::AbstractString)
     cycles = Vector{Vector{Int}}(undef, 0)
+    str_reconstructed = ""
 
     for m in eachmatch(r"\(\d+(?:,\d+)*\)", str)
         str_cycle = m.match
+        str_reconstructed *= str_cycle
         current_cycle = Int[]
 
         for m_num in eachmatch(r"\d+(?=[,\)])", str_cycle)
@@ -136,6 +139,11 @@ function string_to_cycles(str::AbstractString)
             push!(current_cycle, num)
         end
         push!(cycles, copy(current_cycle))
+    end
+
+    # Basic input validation with generic error message
+    if str_reconstructed != str
+        throw(Meta.ParseError)
     end
     return cycles
 end

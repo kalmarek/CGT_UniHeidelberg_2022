@@ -3,7 +3,7 @@ module AbstractPermutations
 import ..GroupElement
 import ..orbit_plain
 
-export AbstractPermutation, degree, cycle_decomposition
+export AbstractPermutation, degree
 
 """
     AbstractPermutation

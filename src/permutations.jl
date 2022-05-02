@@ -99,10 +99,8 @@ function degree(σ::CyclePermutation)
     # it then suffices to take the maximum element in each cycle,
     # and again take the maximum over these cycles for the degree.
     deg = 1
-    for c ∈ σ.cycles
-        if maximum(c) > deg
-            deg = maximum(c)
-        end
+    if length(σ.cycles) >= 1
+        deg = mapreduce(maximum, max, σ.cycles; init=deg)
     end
     return deg
 end

@@ -61,7 +61,7 @@ struct CyclePermutation <: AbstractPermutation
     images::Vector{Int}
 
     function CyclePermutation(v::AbstractVector{<:Integer}, check=true)
-        # Construct temporary Permutation for cycle decomposition
+        # Construct temporary for cycle decomposition
         σ = Permutation(v, check)
         cycles = cycle_decomposition(σ)
 
@@ -72,7 +72,7 @@ struct CyclePermutation <: AbstractPermutation
         if check
             σ_cat = Int[]
             for c ∈ cycles
-                σ_cat = vcat(σ_cat, c)
+                append!(σ_cat, c)
             end
             @assert allunique(σ_cat) "σ is not a decomposition in disjoint cycles"
         end
@@ -100,8 +100,8 @@ function degree(σ::CyclePermutation)
     # and again take the maximum over these cycles for the degree.
     deg = 1
     for c ∈ σ.cycles
-        if max(c...) > deg
-            deg = max(c...)
+        if maximum(c) > deg
+            deg = maximum(c)
         end
     end
     return deg
@@ -111,7 +111,7 @@ end
 # the sense that the operation becomes trivial (the decomposition is
 # already part of the object). This avoids redundant computations when
 # serializing the permutation (`Base.show()`).
-function cycle_decomposition(σ::CyclePermutation)
+function AbstractPermutations.cycle_decomposition(σ::CyclePermutation)
     return σ.cycles
 end
 
@@ -237,7 +237,7 @@ function Meta.parse(::Type{Permutation}, str::AbstractString)
 end
 
 function cycle_to_images(cycle::Vector{Int})
-    deg = max(cycle...)
+    deg = maximum(cycle)
     images = collect(1:deg)
 
     for k in range(1, length(cycle))
@@ -253,7 +253,7 @@ end
 export cycle_to_images
 
 macro perm_str(str)
-    return eval(Meta.parse(Permutation, str))
+    return Meta.parse(Permutation, str)
 end
 export @perm_str
 

@@ -1,4 +1,4 @@
-@testset "Permutations" for P in [Permutation, CyclePermutation]
+@testset "Permutations" for P in [Permutation, CyclePermutation, CyclePermutation2]
     import CGT_UniHeidelberg_2022: Permutation, degree, orbit_plain
 
     σ = P([2,1,3])

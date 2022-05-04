@@ -63,7 +63,7 @@ struct CyclePermutation <: AbstractPermutation
     function CyclePermutation(v::AbstractVector{<:Integer}, check=true)
         # Construct temporary for cycle decomposition
         σ = Permutation(v, check)
-        cycles = cycle_decomposition(σ)
+        cycles = AbstractPermutations.cycle_decomposition(σ)
 
         # We assume that `cycle_decomposition()` returns a product of
         # disjoint cycles. The implementation in `AbstractPermutations`

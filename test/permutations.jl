@@ -1,5 +1,6 @@
-@testset "Permutations" for P in [Permutation, CyclePermutation, CyclePermutation2]
-    import CGT_UniHeidelberg_2022: Permutation, degree, orbit_plain
+import CGT_UniHeidelberg_2022: Permutation, degree, @perm_str
+
+@testset "AbstractPermutation API: $P" for P in [Permutation, CyclePermutation, CyclePermutation2]
 
     σ = P([2,1,3])
     τ = P([1,3,2])
@@ -15,7 +16,7 @@
     @test degree(τ) == 3
     @test degree(one(σ)) == 1
 
-    @test orbit_plain(1, [P([2,3,4,1])]) == [1,2,3,4]
+    @test CGT_UniHeidelberg_2022.orbit_plain(1, [P([2,3,4,1])]) == [1,2,3,4]
 
     @test sprint(show, σ) == "(1,2)"
     @test sprint(show, τ) == "(2,3)"
@@ -26,7 +27,6 @@
 end
 
 @testset "Permutations (deserialization)" begin
-    import CGT_UniHeidelberg_2022: Permutation, @perm_str
 
     # Identity
     @test Permutation(Int[]) == perm"(1)"

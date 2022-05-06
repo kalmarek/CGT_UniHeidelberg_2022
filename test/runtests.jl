@@ -1,6 +1,6 @@
 using Test
 using CGT_UniHeidelberg_2022
 
-@testset "CGT" begin
+@testset verbose=true "CGT" begin
    include("permutations.jl")
 end

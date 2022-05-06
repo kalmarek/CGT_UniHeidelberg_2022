@@ -228,18 +228,18 @@ function Meta.parse(::Type{Permutation}, str::AbstractString)
     v = cycle_to_images(cycles[1])
     Π = :(Permutation($v)) # string interpolation
 
-    for i ∈ range(2, length(cycles))
+    for i ∈ 2:length(cycles)
         v = cycle_to_images(cycles[i])
         Π = Expr(:call, :*, Π, :(Permutation($v)))
     end
     return Π
 end
 
-function cycle_to_images(cycle::Vector{Int})
+function cycle_to_images(cycle::AbstractVector{<:Integer})
     deg = maximum(cycle)
     images = collect(1:deg)
 
-    for k in range(1, length(cycle))
+    for k in 1:length(cycle)
         i = cycle[k]
         if k < length(cycle)
             images[i] = cycle[k+1]
@@ -256,4 +256,3 @@ macro perm_str(str)
 end
 export @perm_str
 
-# end # of Permutations

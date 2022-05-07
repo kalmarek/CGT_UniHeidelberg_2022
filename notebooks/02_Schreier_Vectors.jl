@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.0
+# v0.19.3
 
 using Markdown
 using InteractiveUtils
@@ -262,14 +262,39 @@ $$(e, g, h, gh,\ldots)$$.
 "
 
 # ╔═╡ f52cb4dd-03d8-4526-880c-4aaad81412ab
-function orbit_transversal(S, x, action=^)
-	@assert !isempty(S) # groups need generators
-	
+"""
+    transversal(x, S::AbstractVector{<:GroupElement}[, action=^])
+Compute the orbit `Δ` and a transversal `T` of `x ∈ Ω` under the action of `G = ⟨S⟩`.
+
+Transversal is a set of representatives of left cosets `Stab_G(x)\\G` satisfying
+
+    x^T[γ] = γ
+
+for every `γ ∈ Δ`.
+
+It is assumed that elements `G` act on `Ω` _on the right_ via `action(x, g)`.
+
+### Input
+ * `x` - point in set `Ω`,
+ * `S` - finite generating set for `G = ⟨S⟩`,
+ * `action` - function defining an action of `G` on `Ω` from the right. Defaults to `^`.
+### Output
+ * `Δ::Vector` - the orbit of `x` under the action of `G`.
+ * `T::Dict` - a transversal.
+"""
+function transversal(x, S::AbstractVector{<:GroupElement}, action=^)
+    @assert !isempty(S)
+    
+	return Δ, T
 end
 
 # ╔═╡ 2fa081db-4ae0-4af6-b513-65d32c3ff856
-let σ = Permutation([1,3,4,2]), τ = Permutation([1,2,4,5,3])
-	orbit_transversal([σ, τ], 2)
+let σ = Permutation([1,3,4,2]), τ = Permutation([1,2,4,5,3]), x = 2
+	Δ, T = transversal(x, [σ, τ])
+	for δ in Δ
+		@assert 2^T[δ] == δ
+	end
+	Δ, T
 end
 
 # ╔═╡ 8acfbaf5-498a-473c-b03a-5eab478ac3b3
@@ -285,7 +310,7 @@ store only
 ```
 The former requires  
 
-	n*degree(s)*sizeof(Int) = n
+	n*degree(s)*sizeof(Int) = n*d*8
 
 bytes (where `n` is the ~length of the orbit) whereas the latter needs only
 
@@ -299,7 +324,7 @@ Of course we also need to keep `S` around.
 
 # ╔═╡ d20d14a4-3414-453d-943f-c760465d0ba7
 md"
-### Factor group elements
+### Factored transversal
 Let us try to store factorisation of representatives in the transversal.
 Thus this time we start by saying that
 ```julia
@@ -313,35 +338,65 @@ the next point in the transversal points to the factored representation of the p
 "
 
 # ╔═╡ 23122d5c-8545-43b9-a33a-2da78a46538a
-function orbit_transversal_exp(S, x, action=^)
-	@assert !isempty(S) # groups need generators
+function transversal_factored(x, S::AbstractVector{<:GroupElement}, action=^)
+    @assert !isempty(S)
 
+    return Δ, T
 end
 
 # ╔═╡ cc0fa689-6d78-4489-9faf-c4ef1b5dc762
-orbit_transversal_exp([σ, τ], 1)
+let σ = Permutation([1,3,4,2]), τ = Permutation([1,2,4,5,3]), x = 2
+	Δ, T = transversal_factored(x, [σ, τ])
+	@assert length(Δ) == 4
+	for δ in Δ
+		@assert x^prod(T[δ]) == δ
+	end
+	Δ, T
+end
 
 # ╔═╡ c73c88f0-a7ec-4260-af2a-665d1fadc150
-let σ = Permutation([2,3,4,1]), τ = Permutation([2,1])
+let σ = Permutation([1,4,2,3]), τ = Permutation([2,3,1]), x = one(σ)
 	S = [σ, τ]
-	x = one(σ)
-	
-	orbit_transversal_exp(S, x, *)
+	e = one(σ)
+	Δ, T = transversal_factored(e, S, *)
+	@assert length(Δ) == 12
+	for g in Δ
+		@assert g == prod(T[g])
+	end
 end
 
 # ╔═╡ 8951b592-0554-45c5-81b8-f1eac7d372dd
-function orbit_Schreier(S, x, action=^)
-    @assert !isempty(S) # groups need generators
+"""
+    schreier(x, S::AbstractVector{<:GroupElement}[, action=^])
+Compute the orbit and a Schreier tree of `x ∈ Ω` under the action of `G = ⟨S⟩`.
 
+It is assumed that elements `G` act on `Ω` _on the right_ via `action(x, g)`.
+
+### Input
+ * `x` - point in set `Ω`,
+ * `S` - finite generating set for `G = ⟨S⟩`,
+ * `action` - function defining an action of `G on `Ω` from the right. Defaults to `^`.
+### Output
+ * `Δ::Vector` - the orbit of `x` under the action of `G`, as a `Vector`.
+ * `Sch::Dict` - a Schreier tree, satisfying `S[Sch[γˢ]] == s` for every `γ ∈ Δ` and every `s ∈ S`.
+"""
+function schreier(x, S::AbstractVector{<:GroupElement}, action=^)
+    @assert !isempty(S)
+
+    return Δ, Sch
 end
 
 # ╔═╡ b6669b69-53f2-4ef5-a17d-b45a9403a523
-S, (Δ, T) = let σ = Permutation([2,1,4,3]), τ = Permutation([1,3,4,2])
+let σ = Permutation([2,1,4,3]), τ = Permutation([1,3,4,2]), x = 2
 	S = [σ, τ]
-	@info S
-	x = one(σ)
-	
-	S, orbit_Schreier(S, 2, ^)
+	@info "" S
+	Δ, Sch = schreier(x, S)
+	for (idx,δ) in pairs(Δ)
+		δ == x && continue
+		k = δ^inv(S[Sch[δ]])
+		@assert findfirst(==(k), Δ) < idx
+	end
+	S, Δ, Sch
 end
 
 # ╔═╡ c4c22682-4bbb-4d6d-a9a5-11afe67f200d
@@ -366,25 +421,37 @@ let current_point = y
 	coset_rep
 end
 ```
->**Exercise 4**: Implement this function as
-```julia
-\"\"\"
-	representative(S, Δ, T, y[, action=^])
-Compute a representative `g` of left-coset `Stab_G(x)g` corresponding to point `y ∈ Δ` in the orbit of `x`.
-## Input
-* `S` a set of generators for `G = ⟨S⟩`
-* `Δ` the orbit of `x` under the action of `G`
-* `T` factored transversal for `Δ`
-* `y` a point in `Δ`.
-## Output
-* `r ∈ G` such that `action(x, r) == y`. 
-\"\"\"
-function representative(S, Δ, T, y)
-	...
-end
-```
-> Are all arguments actually needed?
+>**Exercise 4**: Implement this function as in the cell below. Are all arguments actually needed?
 "
+
+# ╔═╡ a2db5382-9673-45d6-a485-5793baca8255
+"""
+	representative(y, S, Δ, Sch[, action=^])
+Compute a representative `g` of left-coset `Stab_G(x)g` corresponding to point `y ∈ Δ` in the orbit of `x`.
+
+## Input
+* `y` - a point in `Δ`,
+* `S` - a set of generators for `G = ⟨S⟩`,
+* `Δ` - the orbit of `x` under the action of `G`,
+* `Sch` - a Schreier tree for `Δ` and `S`.
+## Output
+* `g ∈ G` such that `xᵍ = y`.
+"""
+function representative(y, S::AbstractVector{<:GroupElement}, Δ, Sch, action=^)
+    
+    return g
+end
+
+# ╔═╡ ac3bf828-217c-4b4c-aa73-2217abf84111
+let σ = Permutation([2,1,4,3]), τ = Permutation([1,3,4,2]), x = 2
+	S = [σ, τ]
+	@info "" S
+	Δ, Sch = schreier(x, S)
+	@assert length(Δ) == 4
+	for δ in Δ
+		@assert x^representative(δ, S, Δ, Sch) == δ
+	end
+end
 
 # ╔═╡ 2e5c13c4-bfe6-4b89-89be-140520cd7dd4
 md"
@@ -392,6 +459,40 @@ md"
 > What are the common operations (=methods) we used so far?
 > Can you think of a \"unifying\" architecture for all three of these objects?
 "
+
+# ╔═╡ ae92e313-c3a4-4fcf-a3f9-4c4b49102548
+md"
+In `schreier` we store indices (in `S`) of generators in the dictionary, so we need to keep the set around. It is not necessary though: since julia passes arguments by reference and `Permutation`s are heap-allocated there can be more than one reference to each `Permutation` at a given time. We can exploit it this feature to store directly references to generators in the dictionary. How? Just say `Sch[γ] = s` instead of `Sch[γ] = idx`.
+
+> **Exercise 6**: modify implementation of `schreier` so that generators are stored directly. Modify `representative` accordingly.
+
+To verify that the identical elements (and not marely equal) are present in `Sch` you may use `===` instead of `==`. While
+
+	x = [1,2,3]; y = copy(x); x == y
+
+returns `true`, `x===y` will be false since `x` and `y` occupy different space in memory (and modifications to `x` will not influence `y`).
+"
+
+# ╔═╡ 38485741-8200-4a45-be38-ac8f55501859
+function schreier2(x, S::AbstractVector{<:GroupElement}, action=^)
+    @assert !isempty(S)
+
+    return Δ, Sch
+end
+
+# ╔═╡ e17132c0-1a59-412c-be50-6c6f6b99d09d
+let σ = Permutation([2,1,4,3]), τ = Permutation([1,3,4,2]), x = 2
+	S = [σ, τ]
+	@info "" S
+	Δ, Sch = schreier2(x, S)
+	for (idx,δ) in pairs(Δ)
+		δ == x && continue
+		k = δ^inv(Sch[δ])
+		@assert S[findfirst(==(Sch[δ]), S)] === Sch[δ] # note the === !
+		@assert findfirst(==(k), Δ) < idx
+	end
+	S, Δ, Sch
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -433,6 +534,11 @@ manifest_format = "2.0"
 # ╠═8951b592-0554-45c5-81b8-f1eac7d372dd
 # ╠═b6669b69-53f2-4ef5-a17d-b45a9403a523
 # ╟─c4c22682-4bbb-4d6d-a9a5-11afe67f200d
+# ╠═a2db5382-9673-45d6-a485-5793baca8255
+# ╠═ac3bf828-217c-4b4c-aa73-2217abf84111
 # ╟─2e5c13c4-bfe6-4b89-89be-140520cd7dd4
+# ╟─ae92e313-c3a4-4fcf-a3f9-4c4b49102548
+# ╠═38485741-8200-4a45-be38-ac8f55501859
+# ╠═e17132c0-1a59-412c-be50-6c6f6b99d09d
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

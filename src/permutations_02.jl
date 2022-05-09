@@ -26,9 +26,8 @@ function degree(σ::CyclePermutation2)
     # it then suffices to take the maximum element in each cycle,
     # and again take the maximum over these cycles for the degree.
     deg = 1
-    non_trivial_cycles = filter(c->length(c)>=2, σ.cycles)
     if length(σ.cycles) >= 1
-        deg = mapreduce(maximum, max, non_trivial_cycles; init=deg)
+        deg = mapreduce(maximum, max, σ.cycles; init=deg)
     end
     return deg
 end
@@ -73,12 +72,20 @@ function AbstractPermutations.cycle_decomposition(images::AbstractVector{<:Integ
         for _ ∈ 2:n # no cycle can be longer than n
             if images[i_cycle] == i
                 break
-            end            
+            end
             i_cycle = images[i_cycle]
             visited[i_cycle] = true
             push!(cycle, i_cycle)
         end
-        push!(cycles, copy(cycle))
+
+        # Since we are looping over the length of the images, instead of
+        # over the degree, it is possible to have (several) cycles of
+        # length 1 (e.g. [1], [2], [3], ...). We could either accept
+        # that the identity has empty cycles, or only keep [1] as [2],
+        # ... are redundant.
+        if length(cycle) >= 2 || i == 1
+            push!(cycles, copy(cycle))
+        end
     end
     return cycles
 end

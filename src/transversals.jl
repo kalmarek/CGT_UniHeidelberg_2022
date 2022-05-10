@@ -1,3 +1,5 @@
+export transversal, transversal_factored, schreier, representative
+
 """
     transversal(x, S::AbstractVector{<:GroupElement}[, action=^])
 Compute the orbit `Δ` and a transversal `T` of `x ∈ Ω` under the action of `G = ⟨S⟩`.
@@ -18,6 +20,8 @@ It is assumed that elements `G` act on `Ω` _on the right_ via `action(x, g)`.
  * `Δ::Vector` - the orbit of `x` under the action of `G`,
  * `T::Dict` - a transversal.
 """
+transversal(x, s::GroupElement, action=^) = transversal(x, [s], action)
+
 function transversal(x, S::AbstractVector{<:GroupElement}, action=^)
     @assert !isempty(S)
     Δ_vec = [x]
@@ -26,8 +30,8 @@ function transversal(x, S::AbstractVector{<:GroupElement}, action=^)
     # The definition of the unit element uses that `S` is not empty, and
     # that `one()` is defined for `GroupElement`.
     e = one(first(S))
-    T = Dict{typeof(x), eltype(S)}()
-    T[x] = e
+    T = Dict(x => e)
+    # T = Dict{typeof(x), eltype(S)}(); T[x] = e
 
     for δ in Δ_vec
         for s in S
@@ -36,6 +40,44 @@ function transversal(x, S::AbstractVector{<:GroupElement}, action=^)
                 push!(Δ, γ)
                 push!(Δ_vec, γ)
                 T[γ] = T[δ]*s
+            end
+        end
+    end
+    return Δ_vec, T
+end
+
+"""
+    This function stores factors of elements in the transversal, instead
+    of elements themselves. Whenever we ask for a coset representative,
+    this means we need to perform `length(T[γ])` multiplications to
+    recover it.
+
+    If we only want to store the indices of the generators, instead of
+    the generators themselves, `T[γ]` is an `Int[]` array, and we loop
+    over `1:length(S)` instead of `S` itself. The identity can then be
+    represented either by an empty array, or a special value; in the
+    former case, array concatenation `[T[δ]; s]` will contain one
+    element less.
+"""
+transversal_factored(x, s::GroupElement, action=^) = transversal_factored(x, [s], action)
+
+function transversal_factored(x, S::AbstractVector{<:GroupElement}, action=^)
+    @assert !isempty(S)
+    Δ_vec = [x]
+    Δ = Set(Δ_vec)
+
+    # The definition of the unit element uses that `S` is not empty, and
+    # that `one()` is defined for `GroupElement`.
+    e = one(first(S))
+    T = Dict(x => [e])
+
+    for δ in Δ_vec
+        for s in S
+            γ = action(δ, s)
+            if γ ∉ Δ
+                push!(Δ, γ)
+                push!(Δ_vec, γ)
+                T[γ] = [T[δ]; s]
             end
         end
     end

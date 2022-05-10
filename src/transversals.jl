@@ -20,8 +20,26 @@ It is assumed that elements `G` act on `Ω` _on the right_ via `action(x, g)`.
 """
 function transversal(x, S::AbstractVector{<:GroupElement}, action=^)
     @assert !isempty(S)
+    Δ_vec = [x]
+    Δ = Set(Δ_vec)
 
-    return
+    # The definition of the unit element uses that `S` is not empty, and
+    # that `one()` is defined for `GroupElement`.
+    e = one(first(S))
+    T = Dict{typeof(x), eltype(S)}()
+    T[x] = e
+
+    for δ in Δ_vec
+        for s in S
+            γ = action(δ, s)
+            if γ ∉ Δ
+                push!(Δ, γ)
+                push!(Δ_vec, γ)
+                T[γ] = T[δ]*s
+            end
+        end
+    end
+    return Δ_vec, T
 end
 
 """

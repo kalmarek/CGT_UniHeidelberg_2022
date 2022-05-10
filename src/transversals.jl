@@ -55,9 +55,9 @@ end
     If we only want to store the indices of the generators, instead of
     the generators themselves, `T[γ]` is an `Int[]` array, and we loop
     over `1:length(S)` instead of `S` itself. The identity can then be
-    represented either by an empty array, or a special value; in the
-    former case, array concatenation `[T[δ]; s]` will contain one
-    element less.
+    represented either be left out (by initializing `T` as an empty
+    dictionary), or a special value; in the former case, array
+    concatenation `T[γ] = [T[δ]; s]` will contain one element less.
 """
 transversal_factored(x, s::GroupElement, action=^) = transversal_factored(x, [s], action)
 
@@ -103,12 +103,30 @@ It is assumed that elements `G` act on `Ω` _on the right_ via `action(x, g)`.
  * `action` - function defining an action of `G`. Defaults to `^`.
 ### Output
  * `Δ::Vector` - the orbit of `x` under the action of `G`, as a `Vector`,
- * `Sch::Dict` - a Schreier tree.
+ * `Sch::Dict` - a Schreier tree. Only the generator indices are stored,
+   i.e. `S[Sch[γˢ] == s` holds for every `γ ∈ Δ` and every `s ∈ S`.
 """
 function schreier(x, S::AbstractVector{<:GroupElement}, action=^)
     @assert !isempty(S)
+    Δ_vec = [x]
+    Δ = Set(Δ_vec)
 
-    return
+    # The generating set `S` could include the neutral element `e`, so 
+    # `S[Sch[γˢ]] == s` should also be defined in this case.
+    # To sidestep the issue, initialize `Sch` as an empty dictionary.
+    Sch = Dict{typeof(x), Int64}()
+
+    for δ in Δ_vec
+        for i in 1:length(S)
+            γ = action(δ, S[i])
+            if γ ∉ Δ
+                push!(Δ, γ)
+                push!(Δ_vec, γ)
+                Sch[γ] = i
+            end
+        end
+    end
+    return Δ_vec, Sch
 end
 
 """
@@ -126,6 +144,27 @@ Compute a representative `g` of left-coset `Stab_G(x)g` corresponding to point `
 function representative(y, Δ, Sch, action=^)
     @assert !isempty(S)
     @assert !isempty(Δ)
+    current_point = y
+    g = one(first(S))
 
-    return
+    # If `y = xᵍ` for `g` in `Stab_G(x)`, then `schreier()` places `y`
+    # in the orbit, but not in `Sch`. Therefore we cannot distinguish
+    # from `Sch` alone if `y` is _not_ in the orbit, or merely the root
+    # of the Schreier tree. To disambiguate, the element `x` can be
+    # specified; the full orbit Δ is not required.
+    x = Δ[1]
+
+    # If `y` is not x, and not in the orbit, the function will terminate
+    # with `KeyError`. To make this a bit more clear, add an assert.
+    if y ≠ x
+        @assert haskey(Sch, y) "Element y is not in the orbit of x"
+    end
+
+    while current_point ≠ x
+	s = S[Sch[current_point]]            # s sends some previous point on the orbit to the current one
+	current_point = current_point^inv(s) # shift current one to the previous one
+	g = s * g                            # accumulate the change
+	# observe: g sends current_point to y.
+    end
+    return g
 end

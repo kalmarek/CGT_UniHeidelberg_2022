@@ -103,8 +103,7 @@ It is assumed that elements `G` act on `Ω` _on the right_ via `action(x, g)`.
  * `action` - function defining an action of `G`. Defaults to `^`.
 ### Output
  * `Δ::Vector` - the orbit of `x` under the action of `G`, as a `Vector`,
- * `Sch::Dict` - a Schreier tree. Only the generator indices are stored,
-   i.e. `S[Sch[γˢ] == s` holds for every `γ ∈ Δ` and every `s ∈ S`.
+ * `Sch::Dict` - a Schreier tree.
 """
 function schreier(x, S::AbstractVector{<:GroupElement}, action=^)
     @assert !isempty(S)
@@ -117,12 +116,12 @@ function schreier(x, S::AbstractVector{<:GroupElement}, action=^)
     Sch = Dict{typeof(x), Int64}()
 
     for δ in Δ_vec
-        for i in 1:length(S)
-            γ = action(δ, S[i])
+        for s in S
+            γ = action(δ, s)
             if γ ∉ Δ
                 push!(Δ, γ)
                 push!(Δ_vec, γ)
-                Sch[γ] = i
+                Sch[γ] = s
             end
         end
     end
@@ -161,7 +160,7 @@ function representative(y, Δ, Sch, action=^)
     end
 
     while current_point ≠ x
-	s = S[Sch[current_point]]            # s sends some previous point on the orbit to the current one
+	s = Sch[current_point]            # s sends some previous point on the orbit to the current one
 	current_point = current_point^inv(s) # shift current one to the previous one
 	g = s * g                            # accumulate the change
 	# observe: g sends current_point to y.

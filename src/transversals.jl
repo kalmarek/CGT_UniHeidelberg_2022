@@ -47,44 +47,6 @@ function transversal(x, S::AbstractVector{<:GroupElement}, action=^)
 end
 
 """
-    This function stores factors of elements in the transversal, instead
-    of elements themselves. Whenever we ask for a coset representative,
-    this means we need to perform `length(T[γ])` multiplications to
-    recover it.
-
-    If we only want to store the indices of the generators, instead of
-    the generators themselves, `T[γ]` is an `Int[]` array, and we loop
-    over `1:length(S)` instead of `S` itself. The identity can then be
-    represented either be left out (by initializing `T` as an empty
-    dictionary), or a special value; in the former case, array
-    concatenation `T[γ] = [T[δ]; s]` will contain one element less.
-"""
-transversal_factored(x, s::GroupElement, action=^) = transversal_factored(x, [s], action)
-
-function transversal_factored(x, S::AbstractVector{<:GroupElement}, action=^)
-    @assert !isempty(S)
-    Δ_vec = [x]
-    Δ = Set(Δ_vec)
-
-    # The definition of the unit element uses that `S` is not empty, and
-    # that `one()` is defined for `GroupElement`.
-    e = one(first(S))
-    T = Dict(x => [e])
-
-    for δ in Δ_vec
-        for s in S
-            γ = action(δ, s)
-            if γ ∉ Δ
-                push!(Δ, γ)
-                push!(Δ_vec, γ)
-                T[γ] = [T[δ]; s]
-            end
-        end
-    end
-    return Δ_vec, T
-end
-
-"""
     schreier(x, S::AbstractVector{<:GroupElement}[, action=^])
 Compute the orbit and a Schreier tree of `x ∈ Ω` under the action of `G = ⟨S⟩`.
 
@@ -105,6 +67,8 @@ It is assumed that elements `G` act on `Ω` _on the right_ via `action(x, g)`.
  * `Δ::Vector` - the orbit of `x` under the action of `G`, as a `Vector`,
  * `Sch::Dict` - a Schreier tree.
 """
+schreier(x, s::GroupElement, action=^) = schreier(x, [s], action)
+
 function schreier(x, S::AbstractVector{<:GroupElement}, action=^)
     @assert !isempty(S)
     Δ_vec = [x]
@@ -160,9 +124,12 @@ function representative(y, Δ, Sch, action=^)
     end
 
     while current_point ≠ x
-        s = Sch[current_point]            # s sends some previous point on the orbit to the current one
-        current_point = current_point^inv(s) # shift current one to the previous one
-        g = s * g                            # accumulate the change
+        # s sends some previous point on the orbit to the current one
+        s = Sch[current_point]
+        # shift current one to the previous one
+        current_point = current_point^inv(s)
+        # accumulate the change
+        g = s * g
         # observe: g sends current_point to y.
     end
     return g

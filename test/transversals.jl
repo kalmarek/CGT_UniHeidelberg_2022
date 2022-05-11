@@ -31,11 +31,42 @@ import CGT_UniHeidelberg_2022: transversal, schreier, representative, GroupEleme
     end
 
     @testset "factored transversal" begin
-        # implement here transversal_factored which contains list of generators instead of their product
+        """
+        This function stores factors of elements in the transversal, instead
+        of elements themselves. Whenever we ask for a coset representative,
+        this means we need to perform `length(T[γ])` multiplications to
+        recover it.
+
+        If we only want to store the indices of the generators, instead of
+        the generators themselves, `T[γ]` is an `Int[]` array, and we loop
+        over `1:length(S)` instead of `S` itself. The identity can then be
+        represented either be left out (by initializing `T` as an empty
+        dictionary), or a special value; in the former case, array
+        concatenation `T[γ] = [T[δ]; s]` will contain one element less.
+        """
+        transversal_factored(x, s::GroupElement, action=^) = transversal_factored(x, [s], action)
+
         function transversal_factored(x, S::AbstractVector{<:GroupElement}, action=^)
             @assert !isempty(S)
+            Δ_vec = [x]
+            Δ = Set(Δ_vec)
 
-            return
+            # The definition of the unit element uses that `S` is not
+            # empty, and that `one()` is defined for `GroupElement`.
+            e = one(first(S))
+            T = Dict(x => [e])
+
+            for δ in Δ_vec
+                for s in S
+                    γ = action(δ, s)
+                    if γ ∉ Δ
+                        push!(Δ, γ)
+                        push!(Δ_vec, γ)
+                        T[γ] = [T[δ]; s]
+                    end
+                end
+            end
+            return Δ_vec, T
         end
 
         @testset "action on points" begin

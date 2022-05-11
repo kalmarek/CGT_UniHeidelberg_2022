@@ -24,26 +24,20 @@ transversal(x, s::GroupElement, action=^) = transversal(x, [s], action)
 
 function transversal(x, S::AbstractVector{<:GroupElement}, action=^)
     @assert !isempty(S)
-    Δ_vec = [x]
-    Δ = Set(Δ_vec)
-
-    # The definition of the unit element uses that `S` is not empty, and
-    # that `one()` is defined for `GroupElement`.
-    e = one(first(S))
+    Δ = [x]
+    e = one(first(S)) # S not empty, `one` defined for `GroupElement`
     T = Dict(x => e)
-    # T = Dict{typeof(x), eltype(S)}(); T[x] = e
 
-    for δ in Δ_vec
+    for δ in Δ
         for s in S
             γ = action(δ, s)
-            if γ ∉ Δ
+            if γ ∉ keys(T)
                 push!(Δ, γ)
-                push!(Δ_vec, γ)
-                T[γ] = T[δ]*s
+                push!(T, γ => T[δ]*s)
             end
         end
     end
-    return Δ_vec, T
+    return Δ, T
 end
 
 """
@@ -71,21 +65,22 @@ schreier(x, s::GroupElement, action=^) = schreier(x, [s], action)
 
 function schreier(x, S::AbstractVector{<:GroupElement}, action=^)
     @assert !isempty(S)
-    Δ_vec = [x]
-    Δ = Set(Δ_vec)
-    Sch = Dict{typeof(x), eltype(S)}()
+    Δ = [x]
+    # XXX: Since we use the Sch dictionary to check elements in the
+    # orbit, we add `Sch[x] = e` so that `x` is not added a second time.
+    Sch = Dict(x => one(first(S)))
+    #Sch = Dict{typeof(x), eltype(S)}()
 
-    for δ in Δ_vec
+    for δ in Δ
         for s in S
             γ = action(δ, s)
-            if γ ∉ Δ
+            if γ ∉ keys(Sch)
                 push!(Δ, γ)
-                push!(Δ_vec, γ)
-                Sch[γ] = s
+                push!(Sch, γ => s)
             end
         end
     end
-    return Δ_vec, Sch
+    return Δ, Sch
 end
 
 """

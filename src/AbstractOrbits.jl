@@ -34,11 +34,14 @@ abstract type AbstractOrbit end
 Generalized orbit function which takes an input dictionary `Vin` and a
 function f(δ,s,γ) to populate it. This is used in `Transversal` and
 `Schreier`, and these structures only define `Vin` and f accordingly.
-"""
-function orbit_producer(x::AbstractVector, S::AbstractVector{<:GroupElement}, V::Dict, Vfunc, action=^)
-    @assert !isempty(S)
-    Δ = x
 
+The orbit Δ is taken an input argument so that both the orbit and the
+dictionary V can be initialized in the same place (the caller), reducing
+the odds of inconsistencies.
+"""
+function orbit_producer(Δ::AbstractVector, S::AbstractVector{<:GroupElement},
+                        V::Dict, Vfunc, action=^)
+    @assert !isempty(S)
     for δ ∈ Δ
         for s ∈ S
             γ = action(δ, s)
@@ -48,21 +51,25 @@ function orbit_producer(x::AbstractVector, S::AbstractVector{<:GroupElement}, V:
             end
         end
     end
-    return Δ
+    return # Δ, V
 end
 
-# Specialization for `orbit_plain`. This might result in an additional
-# copy of the orbit, as it is stored in both producer the consumer.
 struct Orbit <: AbstractOrbit
     Δ::AbstractVector
 
-    # `Orbit` can be defined on an array of points, returning a union
-    # of orbits for each point.
     function Orbit(x::AbstractVector, S::AbstractVector{<:GroupElement}, action=^)
-        Δ_tmp = Dict{eltype(x), Nothing}()
-        Δ_fnc = (V, δ, s) -> nothing
+        Δ_vec = x
+        Δ_set = Dict{eltype(x), Nothing}() # ad-hoc Set
+        noop = (V_tmp, δ, s) -> nothing
 
-        return new(orbit_producer(x, S, Δ_tmp, Δ_fnc, action))        
+        # `Orbit` can be defined on an array of points, returning a union of
+        # orbits for each point. Create a dictionary entry for each point.
+        for δ ∈ Δ_vec
+            push!(Δ_set, δ => nothing)
+        end
+
+        orbit_producer(Δ_vec, S, Δ_set, noop, action) # populates Δ_vec, Δ_set
+        return new(Δ_vec)
     end
 
     Orbit(x, S::AbstractVector{<:GroupElement}, action=^) = Orbit([x], S, action)
@@ -74,11 +81,12 @@ struct Transversal <: AbstractOrbit
     T::Dict # Dict{typeof(x), eltype(S)}()
 
     function Transversal(x, S::AbstractVector{<:GroupElement}, action=^)
+        Δ_vec = [x]
         T_tmp = Dict(x => one(first(S)))
         T_fnc = (T_tmp, δ, s) -> T_tmp[δ]*s
-        Δ_tmp = orbit_producer([x], S, T_tmp, T_fnc, action) # populate Δ and T
 
-        return new(Δ_tmp, T_tmp)
+        orbit_producer(Δ_vec, S, T_tmp, T_fnc, action) # populates Δ, T
+        return new(Δ_vec, T_tmp)
     end
 
     Transversal(x, s::GroupElement, action=^) = Transversal(x, [s], action)
@@ -89,11 +97,12 @@ struct Schreier <: AbstractOrbit
     Sch::Dict # Dict{typeof(x), eltype(S)}()
 
     function Schreier(x, S::AbstractVector{<:GroupElement}, action=^)
-        Sch_tmp = Dict{typeof(x), eltype(S)}()
+        Δ_vec = [x]
+        Sch_tmp = Dict{typeof(x), eltype(S)}(x => one(first(S)))
         Sch_fnc = (Sch_tmp, δ, s) -> s
-        Δ_tmp = orbit_producer([x], S, Sch_tmp, Sch_fnc, action) # populate Δ and Sch
 
-        return new(Δ_tmp, Sch_tmp)
+        orbit_producer(Δ_vec, S, Sch_tmp, Sch_fnc, action) # populates Δ, Sch
+        return new(Δ_vec, Sch_tmp)
     end
 
     Schreier(x, s::GroupElement, action=^) = Schreier(x, [s], action)

@@ -73,11 +73,7 @@ function schreier(x, S::AbstractVector{<:GroupElement}, action=^)
     @assert !isempty(S)
     Δ_vec = [x]
     Δ = Set(Δ_vec)
-
-    # The generating set `S` could include the neutral element `e`, so 
-    # `S[Sch[γˢ]] == s` should also be defined in this case.
-    # To sidestep the issue, initialize `Sch` as an empty dictionary.
-    Sch = Dict{typeof(x), Int64}()
+    Sch = Dict{typeof(x), eltype(S)}()
 
     for δ in Δ_vec
         for s in S
@@ -105,17 +101,17 @@ Compute a representative `g` of left-coset `Stab_G(x)g` corresponding to point `
 * `g ∈ G` such that `xᵍ = y`.
 """
 function representative(y, Δ, Sch, action=^)
-    @assert !isempty(S)
     @assert !isempty(Δ)
     current_point = y
-    g = one(first(S))
+    # XXX: this only works if `Sch` is non-empty
+    g = one(first(values(Sch)))
 
     # If `y = xᵍ` for `g` in `Stab_G(x)`, then `schreier()` places `y`
     # in the orbit, but not in `Sch`. Therefore we cannot distinguish
     # from `Sch` alone if `y` is _not_ in the orbit, or merely the root
     # of the Schreier tree. To disambiguate, the element `x` can be
     # specified; the full orbit Δ is not required.
-    x = Δ[1]
+    x = first(Δ)
 
     # If `y` is not x, and not in the orbit, the function will terminate
     # with `KeyError`. To make this a bit more clear, add an assert.

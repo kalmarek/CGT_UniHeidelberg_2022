@@ -27,13 +27,8 @@ export AbstractOrbit, Orbit, Transversal, Schreier
 """
 abstract type AbstractOrbit end
 
-# Parametrized producer which will be specialized later in `Orbit`,
-# `Transversal` and `Schreier` structs.
-function orbit_producer(x, S::AbstractVector{<:GroupElement}, action=^, Vin=nothing, Vfunc=nothing)
+function orbit_producer(x, S::AbstractVector{<:GroupElement}, Vin::Dict, Vfunc, action=^)
     @assert !isempty(S)
-    if isnothing(Vfunc)
-        Vfunc = (Vin, δ, s, γ) -> nothing
-    end
 
     # We iterate over both a set and an array because sets are
     # implicitly sorted on insertion, while arrays preserve order.
@@ -48,7 +43,7 @@ function orbit_producer(x, S::AbstractVector{<:GroupElement}, action=^, Vin=noth
                 # can continue over the whole orbit.
                 push!(Δ, γ)
                 push!(Δ_vec, γ)
-                # Perform additional operations on δ,s,γ (if defined)
+                # Perform additional operations on δ,s,γ
                 Vfunc(Vin, δ, s, γ)
             end
         end
@@ -62,19 +57,21 @@ struct Orbit <: AbstractOrbit
     Δ::AbstractVector
 
     function Orbit(x, S::AbstractVector{<:GroupElement}, action=^)
-        return new(orbit_producer(x, S, action))
+        Δ_tmp = Dict{}()
+        Δ_fnc = (Vin, δ, s, γ) -> nothing
+
+        return new(orbit_producer(x, S, Δ_tmp, Δ_fnc, action))
     end
 end
 
 struct Transversal <: AbstractOrbit
     Δ::AbstractVector
-    T # Dict{typeof(x), eltype(S)}()
+    T::Dict # Dict{typeof(x), eltype(S)}()
 
-    # XXX: do anonymous functions capture surrounding variables (by reference)?
     function Transversal(x, S::AbstractVector{<:GroupElement}, action=^)
         T_tmp = Dict(x => one(first(S)))
         T_fnc = (T_tmp, δ, s, γ) -> (T_tmp[γ] = T_tmp[δ]*s)
-        Δ_tmp = orbit_producer(x, S, action, T_tmp, T_fnc)
+        Δ_tmp = orbit_producer(x, S, T_tmp, T_fnc, action)
 
         return new(Δ_tmp, T_tmp)
     end
@@ -82,13 +79,12 @@ end
 
 struct Schreier <: AbstractOrbit
     Δ::AbstractVector
-    Sch # Dict{typeof(x), eltype(S)}()
+    Sch::Dict # Dict{typeof(x), eltype(S)}()
 
-    # XXX: do anonymous functions capture surrounding variables (by reference)?
     function Schreier(x, S::AbstractVector{<:GroupElement}, action=^)
         Sch_tmp = Dict{typeof(x), eltype(S)}()
         Sch_fnc = (Sch_tmp, δ, s, γ) -> (Sch_tmp[γ] = s)
-        Δ_tmp = orbit_producer(x, S, action, Sch_tmp, Sch_fnc)
+        Δ_tmp = orbit_producer(x, S, Sch_tmp, Sch_fnc, action)
 
         return new(Δ_tmp, Sch_tmp)
     end

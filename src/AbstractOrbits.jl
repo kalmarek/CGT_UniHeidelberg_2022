@@ -62,6 +62,8 @@ struct Orbit <: AbstractOrbit
 
         return new(orbit_producer(x, S, Δ_tmp, Δ_fnc, action))
     end
+
+    Orbit(x, s::GroupElement, action=^) = Orbit(x, [s], action)
 end
 
 struct Transversal <: AbstractOrbit
@@ -75,6 +77,8 @@ struct Transversal <: AbstractOrbit
 
         return new(Δ_tmp, T_tmp)
     end
+
+    Transversal(x, s::GroupElement, action=^) = Transversal(x, [s], action)
 end
 
 struct Schreier <: AbstractOrbit
@@ -88,6 +92,8 @@ struct Schreier <: AbstractOrbit
 
         return new(Δ_tmp, Sch_tmp)
     end
+
+    Schreier(x, s::GroupElement, action=^) = Schreier(x, [s], action)
 end
 
 # end # of module AbstractOrbits

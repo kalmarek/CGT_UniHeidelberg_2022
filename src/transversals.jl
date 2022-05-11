@@ -123,9 +123,9 @@ function representative(y, Δ, Sch, action=^)
         # s sends some previous point on the orbit to the current one
         s = Sch[current_point]
         # shift current one to the previous one
-        current_point = current_point^inv(s)
+        current_point = action(current_point, inv(s))
         # accumulate the change
-        g = s * g
+        g = s*g
         # observe: g sends current_point to y.
     end
     return g

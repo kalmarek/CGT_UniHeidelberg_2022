@@ -37,9 +37,6 @@ function f(δ,s,γ) to populate it. This is used in `Transversal` and
 """
 function orbit_producer(x::AbstractVector, S::AbstractVector{<:GroupElement}, Vin::Dict, Vfunc, action=^)
     @assert !isempty(S)
-
-    # We iterate over both a set and an array because sets are
-    # implicitly sorted on insertion, while arrays preserve order.
     Δ_vec = x
     Δ = Set(Δ_vec)
 

@@ -160,10 +160,10 @@ function representative(y, Δ, Sch, action=^)
     end
 
     while current_point ≠ x
-	s = Sch[current_point]            # s sends some previous point on the orbit to the current one
-	current_point = current_point^inv(s) # shift current one to the previous one
-	g = s * g                            # accumulate the change
-	# observe: g sends current_point to y.
+        s = Sch[current_point]            # s sends some previous point on the orbit to the current one
+        current_point = current_point^inv(s) # shift current one to the previous one
+        g = s * g                            # accumulate the change
+        # observe: g sends current_point to y.
     end
     return g
 end

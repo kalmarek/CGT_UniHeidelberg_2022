@@ -31,6 +31,10 @@ abstract type AbstractOrbit end
 # `Transversal` and `Schreier` structs.
 function orbit_producer(x, S::AbstractVector{<:GroupElement}, action=^, Vin=nothing, Vfunc=nothing)
     @assert !isempty(S)
+    if isnothing(Vfunc)
+        Vfunc = (Vin, δ, s, γ) -> nothing
+    end
+
     # We iterate over both a set and an array because sets are
     # implicitly sorted on insertion, while arrays preserve order.
     Δ_vec = [x]
@@ -44,11 +48,8 @@ function orbit_producer(x, S::AbstractVector{<:GroupElement}, action=^, Vin=noth
                 # can continue over the whole orbit.
                 push!(Δ, γ)
                 push!(Δ_vec, γ)
-
-                # Perform additional operations on δ,s,γ
-                if !isnothing(Vfunc)
-                    Vfunc(Vin, δ, s, γ)
-                end
+                # Perform additional operations on δ,s,γ (if defined)
+                Vfunc(Vin, δ, s, γ)
             end
         end
     end

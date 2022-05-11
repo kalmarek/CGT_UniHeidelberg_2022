@@ -22,18 +22,15 @@ export AbstractOrbit, Orbit, Transversal, Schreier
     `transversal` and `schreier` are only defined on a single element.
     In this module we assume the orbit of a single element.
 
-    The "common loop" between `orbit_plain`, `transversal` and `schreier`
-    can be implemented with some heavy machinery, i.e. coroutines. [1]
-
-    [1] https://docs.julialang.org/en/v1/manual/asynchronous-programming
+    The implementation is done by passing functions and their source
+    (dictionaries) to a generalized orbit function.
 """
 abstract type AbstractOrbit end
 
 # Parametrized producer which will be specialized later in `Orbit`,
 # `Transversal` and `Schreier` structs.
-function orbit_producer(c::Channel, x, S::AbstractVector{<:GroupElement}, action)
+function orbit_producer(x, S::AbstractVector{<:GroupElement}, action=^, Vin=nothing, Vfunc=nothing)
     @assert !isempty(S)
-
     # We iterate over both a set and an array because sets are
     # implicitly sorted on insertion, while arrays preserve order.
     Δ_vec = [x]
@@ -47,11 +44,15 @@ function orbit_producer(c::Channel, x, S::AbstractVector{<:GroupElement}, action
                 # can continue over the whole orbit.
                 push!(Δ, γ)
                 push!(Δ_vec, γ)
-                # The magic happens here!
-                put!(c, (δ, s, γ))
+
+                # Perform additional operations on δ,s,γ
+                if !isnothing(Vfunc)
+                    Vfunc(Vin, δ, s, γ)
+                end
             end
         end
     end
+    return Δ_vec
 end
 
 # Specialization for `orbit_plain`. This might result in an additional
@@ -60,14 +61,7 @@ struct Orbit <: AbstractOrbit
     Δ::AbstractVector
 
     function Orbit(x, S::AbstractVector{<:GroupElement}, action=^)
-        producer(c::Channel) = orbit_producer(c, x, S, action)
-        Δ_tmp = [x]
-
-        for vals in Channel(producer)
-            _, _, γ = vals # δ, s not needed
-            push!(Δ_tmp, γ)
-        end
-        return new(Δ_tmp)
+        return new(orbit_producer(x, S, action))
     end
 end
 
@@ -75,34 +69,26 @@ struct Transversal <: AbstractOrbit
     Δ::AbstractVector
     T # Dict{typeof(x), eltype(S)}()
 
+    # XXX: do anonymous functions capture surrounding variables (by reference)?
     function Transversal(x, S::AbstractVector{<:GroupElement}, action=^)
-        producer(c::Channel) = orbit_producer(c, x, S, action)
-        Δ_tmp = [x]
         T_tmp = Dict(x => one(first(S)))
+        T_fnc = (T_tmp, δ, s, γ) -> (T_tmp[γ] = T_tmp[δ]*s)
+        Δ_tmp = orbit_producer(x, S, action, T_tmp, T_fnc)
 
-        for vals in Channel(producer)
-            δ, s, γ = vals
-            push!(Δ_tmp, γ)
-            T_tmp[γ] = T_tmp[δ]*s
-        end
         return new(Δ_tmp, T_tmp)
     end
 end
 
 struct Schreier <: AbstractOrbit
     Δ::AbstractVector
-    Sch # Dict{typeof(x), Int64}()
+    Sch # Dict{typeof(x), eltype(S)}()
 
+    # XXX: do anonymous functions capture surrounding variables (by reference)?
     function Schreier(x, S::AbstractVector{<:GroupElement}, action=^)
-        producer(c::Channel) = orbit_producer(c, x, S, action)
-        Δ_tmp = [x]
-        Sch_tmp = Dict{typeof(x), Int64}()
+        Sch_tmp = Dict{typeof(x), eltype(S)}()
+        Sch_fnc = (Sch_tmp, δ, s, γ) -> (Sch_tmp[γ] = s)
+        Δ_tmp = orbit_producer(x, S, action, Sch_tmp, Sch_fnc)
 
-        for vals in Channel(producer)
-            δ, s, γ = vals
-            push!(Δ_tmp, γ)
-            Sch_tmp[γ] = s
-        end
         return new(Δ_tmp, Sch_tmp)
     end
 end

@@ -1,5 +1,31 @@
 export transversal, transversal_factored, schreier, representative
 
+# import _orbit_producer!
+
+"""
+Generalized orbit function which takes an input dictionary `Vin` and a
+function f(δ,s,γ) to populate it. This is used in `Transversal` and
+`Schreier`, and these structures only define `Vin` and f accordingly.
+
+The orbit Δ is taken an input argument so that both the orbit and the
+dictionary V can be initialized in the same place (the caller), reducing
+the odds of inconsistencies.
+"""
+function _orbit_producer!(Δ::AbstractVector, S::AbstractVector{<:GroupElement},
+                          V::Dict, Vfunc, action=^)
+    @assert !isempty(S)
+    for δ ∈ Δ
+        for s ∈ S
+            γ = action(δ, s)
+            if γ ∉ keys(V)
+                push!(Δ, γ)
+                push!(V, γ => Vfunc(V, δ, s))
+            end
+        end
+    end
+    return Δ, V
+end
+
 """
     transversal(x, S::AbstractVector{<:GroupElement}[, action=^])
 Compute the orbit `Δ` and a transversal `T` of `x ∈ Ω` under the action of `G = ⟨S⟩`.
@@ -25,18 +51,11 @@ transversal(x, s::GroupElement, action=^) = transversal(x, [s], action)
 function transversal(x, S::AbstractVector{<:GroupElement}, action=^)
     @assert !isempty(S)
     Δ = [x]
-    e = one(first(S)) # S not empty, `one` defined for `GroupElement`
-    T = Dict(x => e)
+    # S not empty, `one` defined for `GroupElement`
+    T = Dict(x => one(first(S)))
+    T_fnc = (T, δ, s) -> T[δ]*s
 
-    for δ in Δ
-        for s in S
-            γ = action(δ, s)
-            if γ ∉ keys(T)
-                push!(Δ, γ)
-                push!(T, γ => T[δ]*s)
-            end
-        end
-    end
+    _orbit_producer!(Δ, S, T, T_fnc, action)
     return Δ, T
 end
 
@@ -69,17 +88,9 @@ function schreier(x, S::AbstractVector{<:GroupElement}, action=^)
     # XXX: Since we use the Sch dictionary to check elements in the
     # orbit, we add `Sch[x] = e` so that `x` is not added a second time.
     Sch = Dict(x => one(first(S)))
-    #Sch = Dict{typeof(x), eltype(S)}()
+    Sch_fnc = (Sch, δ, s) -> s
 
-    for δ in Δ
-        for s in S
-            γ = action(δ, s)
-            if γ ∉ keys(Sch)
-                push!(Δ, γ)
-                push!(Sch, γ => s)
-            end
-        end
-    end
+    _orbit_producer!(Δ, S, Sch, Sch_fnc, action)
     return Δ, Sch
 end
 

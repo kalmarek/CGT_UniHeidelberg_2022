@@ -8,8 +8,8 @@ using .AbstractPermutations
 
 include("permutations.jl")
 include("permutations_02.jl")
-include("transversals.jl")
 
+include("transversals.jl")
 include("AbstractOrbits.jl")
 # using .AbstractOrbits
 

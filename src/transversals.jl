@@ -18,10 +18,22 @@ It is assumed that elements `G` act on `Ω` _on the right_ via `action(x, g)`.
  * `Δ::Vector` - the orbit of `x` under the action of `G`,
  * `T::Dict` - a transversal.
 """
-function transversal(x, S::AbstractVector{<:GroupElement}, action=^)
-    @assert !isempty(S)
-
-    return
+function transversal(x::Any, S::AbstractVector{<:GroupElement}, action=^)
+    @assert !isempty(S) # groups need generators
+    Δ = [x]
+	
+	T = Dict(x => one(first(S)))
+    for δ in Δ
+        for s in S
+            γ = action(δ, s)
+            if γ ∉ keys(T)
+                push!(Δ, γ)
+				T[γ] = T[δ]*s
+            end
+        end
+    end
+    
+	return Δ, T
 end
 
 """
@@ -46,9 +58,20 @@ It is assumed that elements `G` act on `Ω` _on the right_ via `action(x, g)`.
  * `Sch::Dict` - a Schreier tree.
 """
 function schreier(x, S::AbstractVector{<:GroupElement}, action=^)
-    @assert !isempty(S)
+    @assert !isempty(S) # groups need generators
+    Δ = [x]
+	Sch = Dict(x => one(first(S)))
+    for δ in Δ
+        for (i, s) in pairs(S)
+            γ = action(δ, s)
+            if γ ∉ keys(Sch)
+                push!(Δ, γ)
+				Sch[γ] = s
+            end
+        end
+    end
 
-    return
+    return Δ, Sch
 end
 
 """
@@ -64,8 +87,13 @@ Compute a representative `g` of left-coset `Stab_G(x)g` corresponding to point `
 * `g ∈ G` such that `xᵍ = y`.
 """
 function representative(y, Δ, Sch, action=^)
-    @assert !isempty(S)
-    @assert !isempty(Δ)
-
-    return
+	current = y
+	g = one(Sch[y])
+	
+	while (gen = Sch[current]) != one(Sch[current])
+		current = action(current, inv(gen))
+		g = gen * g
+	end
+	
+	return g
 end

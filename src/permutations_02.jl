@@ -21,7 +21,7 @@ struct CyclePermutation2 <: AbstractPermutation
     end
 end
 
-function degree(σ::CyclePermutation2)
+function AbstractPermutations.degree(σ::CyclePermutation2)
     # Cycles of length k>=2 have no elements mapped to themselves;
     # it then suffices to take the maximum element in each cycle,
     # and again take the maximum over these cycles for the degree.
@@ -73,7 +73,7 @@ function AbstractPermutations.cycle_decomposition(images::AbstractVector{<:Integ
         for _ ∈ 2:n # no cycle can be longer than n
             if images[i_cycle] == i
                 break
-            end            
+            end
             i_cycle = images[i_cycle]
             visited[i_cycle] = true
             push!(cycle, i_cycle)

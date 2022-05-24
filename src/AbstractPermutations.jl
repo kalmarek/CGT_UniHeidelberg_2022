@@ -3,7 +3,7 @@ module AbstractPermutations
 import ..GroupElement
 import ..orbit_plain
 
-export AbstractPermutation, degree
+export AbstractPermutation, degree, firstmoved
 
 """
     AbstractPermutation
@@ -29,7 +29,27 @@ By convention `degree` of the trivial permutation must return `1`.
 """
 function degree end
 
+"""
+    firstmoved(σ::AbstractPermutation)
+Return the minimal `i` such that `σ(i) ≠ i`, or `nothing` if `σ == one(σ)`.
+"""
+firstmoved(σ::AbstractPermutation) = nextmoved(σ, 1)
+
+"""
+    nextmoved(σ::AbstractPermutation, d::Integer)
+Return the first `i ≥ d` such that `σ(i) ≠ i`, or `nothing` if no such `i` exists.
+"""
+function nextmoved(σ::AbstractPermutation, d::Integer)
+    for i in d:degree(σ)
+        if σ(i) ≠ i
+            return i
+        end
+    end
+    return nothing # when σ fixes all points ≥ d
+end
+
 Base.one(σ::P) where P<:AbstractPermutation = P(Int[], false)
+Base.isone(σ::AbstractPermutation) = degree(σ) == 1
 
 function Base.inv(σ::P) where P<:AbstractPermutation
     img = collect(1:degree(σ))
@@ -89,6 +109,7 @@ function Base.show(io::IO, σ::AbstractPermutation)
 end
 
 function cycle_decomposition(σ::AbstractPermutation)
+    isone(σ) && return Vector{Vector{Int}}()
     visited = falses(degree(σ))
     cycles = Vector{Vector{Int}}()
     # each cycle will be a Vector{Int} and we have a whole bunch of them

@@ -114,19 +114,18 @@ end
 =#
 
 function Base.show(io::IO, σ::AbstractPermutation)
-    is_trivial = true
-    for cycle in cycle_decomposition(σ)
-        if length(cycle) == 1
-            continue
-        else
-            is_trivial = false
-            print(io, "(")
-            join(io, cycle, ",")
-            print(io, ")")
-        end
-    end
-    if is_trivial
+    if isone(σ)
         print(io, "()")
+    else
+        for cycle in cycle_decomposition(σ)
+            if length(cycle) == 1
+                continue
+            else
+                print(io, "(")
+                join(io, cycle, ",")
+                print(io, ")")
+            end
+        end
     end
 end
 

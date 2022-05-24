@@ -1,7 +1,6 @@
 module AbstractPermutations
 
 import ..GroupElement
-import ..orbit_plain
 
 export AbstractPermutation, degree, firstmoved
 
@@ -142,7 +141,7 @@ function cycle_decomposition(σ::AbstractPermutation)
             # the same orbit twice
             continue # i.e. skip the rest of the body and continue with the next i
         end
-        Δ = orbit_plain(i, σ, ^)
+        Δ = _orbit_plain(i, σ, ^)
         visited[Δ] .= true # modify the `visited` along the whole orbit
         push!(cycles, Δ) # add obtained orbit to cycles
     end
@@ -150,5 +149,18 @@ function cycle_decomposition(σ::AbstractPermutation)
 end
 
 Base.:^(i::Integer, σ::AbstractPermutation) = σ(i)
+
+function _orbit_plain(pt::Integer, σ::AbstractPermutation, action=^)
+    Δ = [pt]
+    Δ_set = Set(Δ)
+    for δ in Δ
+        γ = action(δ, σ)
+        if γ ∉ Δ_set
+            push!(Δ, γ)
+            push!(Δ_set, γ)
+        end
+    end
+    return Δ
+end
 
 end # of module AbstractPermutations

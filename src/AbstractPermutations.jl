@@ -68,6 +68,29 @@ function Base.:(*)(σ::P, τ::AbstractPermutation) where P<:AbstractPermutation
     return P(img, false)
 end
 
+function power_by_composition(σ::AbstractPermutation, n::Integer)
+    @assert n ≥ 0
+    img = collect(1:degree(σ))
+    for i in 1:degree(σ)
+        k = i
+        for j in 1:n
+            k = σ(k)
+        end
+        img[i] = k # = σ(σ(...σ(i)...))
+    end
+    return typeof(σ)(img, false)
+end
+
+function Base.:(^)(σ::AbstractPermutation, n::Integer)
+    n < 0 && return inv(σ)^n
+    if 1 ≤ n ≤ 10
+        return power_by_composition(σ, n)
+    else
+        # TODO: use cycle decomposition to speedup powering?
+        return Base.power_by_squaring(σ, n)
+    end
+end
+
 function Base.:(==)(σ::AbstractPermutation, τ::AbstractPermutation)
     degree(σ) ≠ degree(τ) && return false
     for i in 1:degree(σ)

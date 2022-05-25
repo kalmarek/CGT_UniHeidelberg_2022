@@ -66,3 +66,7 @@ test_orbit_interface(CGT.CyclePermutation2, CGT.Orbit)
 
 test_orbit_interface(CGT.Permutation, CGT.Transversal)
 test_orbit_interface(CGT.CyclePermutation2, CGT.Transversal)
+
+test_orbit_interface(CGT.Permutation, CGT.SchreierTree)
+test_orbit_interface(CGT.CyclePermutation2, CGT.SchreierTree)
+

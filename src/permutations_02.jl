@@ -1,5 +1,3 @@
-export CyclePermutation2, degree, cycle_decomposition
-
 """ Implementation of `CyclePermutation` which does not assume knowledge
 of `Permutation`, and stores data exclusively in `cycles`.
 """

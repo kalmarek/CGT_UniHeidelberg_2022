@@ -1,5 +1,3 @@
-import CGT_UniHeidelberg_2022: Permutation, degree, @perm_str
-
 @testset "AbstractPermutation API: $P" for P in [Permutation, CyclePermutation, CyclePermutation2]
 
     σ = P([2,1,3])
@@ -45,12 +43,12 @@ end
     @test Permutation([4,1,2,3]) == perm"(1,2)(2,3)(3,4)"
 
     # Invalid input
-    @test_throws Meta.ParseError string_to_cycles("(1,)")
-    @test_throws Meta.ParseError string_to_cycles("(,2)")
-    @test_throws Meta.ParseError string_to_cycles("()")
-    @test_throws Meta.ParseError string_to_cycles("(1,2")
-    @test_throws Meta.ParseError string_to_cycles("2,1)")
-    @test_throws Meta.ParseError string_to_cycles("2")
-    @test_throws Meta.ParseError string_to_cycles("2;1")
-    @test_throws Meta.ParseError string_to_cycles("(2,3,1)⋅(4,5)") # this or (2,3,1)∗(4,5) is arguably also a valid case
+    @test_throws Meta.ParseError CGT.string_to_cycles("(1,)")
+    @test_throws Meta.ParseError CGT.string_to_cycles("(,2)")
+    @test_throws Meta.ParseError CGT.string_to_cycles("()")
+    @test_throws Meta.ParseError CGT.string_to_cycles("(1,2")
+    @test_throws Meta.ParseError CGT.string_to_cycles("2,1)")
+    @test_throws Meta.ParseError CGT.string_to_cycles("2")
+    @test_throws Meta.ParseError CGT.string_to_cycles("2;1")
+    @test_throws Meta.ParseError CGT.string_to_cycles("(2,3,1)⋅(4,5)") # this or (2,3,1)∗(4,5) is arguably also a valid case
 end

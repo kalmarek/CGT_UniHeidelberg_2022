@@ -1,11 +1,5 @@
 # included from CGT_UniHeidelberg_2022.jl
 
-export Permutation,
-    CyclePermutation,
-    degree,
-    cycle_decomposition,
-    @perm_str
-
 """ Exercise #1
 `Permutation` as implementation of abstract type `AbstractPermutation`.
 """

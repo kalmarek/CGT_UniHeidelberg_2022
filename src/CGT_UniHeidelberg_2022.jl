@@ -15,7 +15,6 @@ using .AbstractPermutations
 
 include("permutations.jl")
 include("permutations_02.jl")
-include("transversals0.jl")
-include("schreier_sims0.jl")
+include("schreier_sims.jl")
 
 end # of module CGT_UniHeidelberg_2022

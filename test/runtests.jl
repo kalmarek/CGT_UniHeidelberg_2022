@@ -9,7 +9,10 @@ import CGT_UniHeidelberg_2022:
     Orbit,
     Transversal
 
+include("small_perm_groups.jl")
+
 @testset verbose=true "CGT" begin
    include("permutations.jl")
    include("transversals.jl")
+   include("schreier_sims.jl")
 end

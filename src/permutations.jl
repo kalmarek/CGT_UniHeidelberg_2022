@@ -1,11 +1,5 @@
 # included from CGT_UniHeidelberg_2022.jl
 
-export Permutation, CyclePermutation, degree, cycle_decomposition
-export string_to_cycles, string_to_cycles_regexp
-
-import ..degree
-import ..cycle_decomposition
-
 """ Exercise #1
 `Permutation` as implementation of abstract type `AbstractPermutation`.
 """
@@ -28,7 +22,7 @@ function (σ::Permutation)(n::Integer)
     end
 end
 
-function degree(σ::Permutation)
+function AbstractPermutations.degree(σ::Permutation)
     n = length(σ.images)
     for i in n:-1:1  # reverse in steps by -1
         if σ.images[i] != i
@@ -94,7 +88,7 @@ function (σ::CyclePermutation)(n::Integer)
     end
 end
 
-function degree(σ::CyclePermutation)
+function AbstractPermutations.degree(σ::CyclePermutation)
     # Cycles of length k>=2 have no elements mapped to themselves;
     # it then suffices to take the maximum element in each cycle,
     # and again take the maximum over these cycles for the degree.
@@ -163,7 +157,7 @@ function string_to_cycles(str::AbstractString)
             in_cycle = true
             continue
 
-        elseif in_number            
+        elseif in_number
             if c == ')' || c == ','
                 # substring of integers complete
                 in_number = false
@@ -249,10 +243,8 @@ function cycle_to_images(cycle::AbstractVector{<:Integer})
     end
     return images
 end
-export cycle_to_images
 
 macro perm_str(str)
     return Meta.parse(Permutation, str)
 end
-export @perm_str
 

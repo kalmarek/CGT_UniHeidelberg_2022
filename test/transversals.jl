@@ -1,112 +1,72 @@
-import CGT_UniHeidelberg_2022: transversal, schreier, representative, GroupElement
-
-@testset "transversals: $P" for P in [Permutation, CyclePermutation2]
-
-    @testset "transversals" begin
+function test_orbit_interface(P, T)
+    @testset "AbstractOrbit API: $T, $P" begin
         @testset "action on points" begin
             σ = P([1,3,4,2]) # perm"(2,3,4)"
             τ = P([1,2,4,5,3]) # perm"(3,4,5)"
             x = 2
             S = [σ, τ]
 
-            Δ, T = transversal(x, S)
-            @test length(Δ) == 4
-            for δ in Δ
-                @test 2^T[δ] == δ
+            orb = T(x, S, ^)
+
+            @test eltype(orb) == typeof(x)
+            @test length(orb) == 4
+            @test first(orb) == x
+            @test 5 in orb
+            @test !(1 in orb)
+
+            l = Int[]
+            for pt in orb
+                push!(l, pt)
             end
-        end
+            @test length(l) == length(orb)
+            @test CGT.action(orb) == ^
 
-        @testset "action on perms" begin
-            σ = P([1,4,2,3]) # perm"(2,4,3)"
-            τ = P([2,3,1]) # perm"(1,2,3)"
-            x = one(σ)
-            S = [σ, τ]
+            @test issubset(collect(orb), Set([2,3,4,5]))
 
-            Δ, T = transversal(x, S, *)
-            @test length(Δ) == 12
-            for g in Δ
-                @test g == T[g]
-            end
-        end
-    end
-
-    @testset "factored transversal" begin
-        # implement here transversal_factored which contains list of generators instead of their product
-        function transversal_factored(x, S::AbstractVector{<:GroupElement}, action = ^)
-            @assert !isempty(S) # groups need generators
-            Δ = [x]
-            T = Dict(x => [one(first(S))])
-            for δ in Δ
-                for s in S
-                    γ = action(δ, s)
-                    if γ ∉ keys(T)
-                        push!(Δ, γ)
-                        T[γ] = vcat(T[δ], s)
-                    end
+            if orb isa CGT.AbstractTransversal
+                @test orb[first(orb)] isa AbstractPermutations.AbstractPermutation
+                for pt in orb
+                    @test first(orb)^orb[pt] == pt
                 end
             end
-
-            return Δ, T
-        end
-
-        @testset "action on points" begin
-            σ = P([1,3,4,2]) # perm"(2,3,4)"
-            τ = P([1,2,4,5,3]) # perm"(3,4,5)"
-            x = 2
-            S = [σ, τ]
-
-            Δ, T = transversal_factored(x, S)
-            @test length(Δ) == 4
-            for δ in Δ
-                @test 2^prod(T[δ]) == δ
-            end
         end
 
         @testset "action on perms" begin
-            σ = P([1,4,2,3]) # perm"(2,4,3)"
-            τ = P([2,3,1]) # perm"(1,2,3)"
+            σ = perm"(2,4,3)"
+            τ = perm"(1,2,3)"
             x = one(σ)
             S = [σ, τ]
 
-            Δ, T = transversal_factored(x, S, *)
-            @test length(Δ) == 12
-            for g in Δ
-                @test g == prod(T[g])
+            orb = T(x, S, *)
+            @test eltype(orb) == typeof(x)
+            @test length(orb) == 12
+            @test first(orb) == x
+            @test σ*τ in orb
+            @test !(perm"(1,2,3,4,5)" in orb)
+
+            l = typeof(x)[]
+            for pt in orb
+                push!(l, pt)
             end
-        end
-    end
+            @test length(l) == length(orb)
+            @test CGT.action(orb) == *
 
-    @testset "Schreier && representatives" begin
-        @testset "action on points" begin
-            σ = P([1,3,4,2]) # perm"(2,3,4)"
-            τ = P([1,2,4,5,3]) # perm"(3,4,5)"
-            x = 2
-            S = [σ, τ]
-
-            Δ, Sch = schreier(x, S)
-            @test length(Δ) == 4
-            for (idx,δ) in pairs(Δ)
-                δ == x && continue # Sch[x] is undefined
-                k = δ^inv(Sch[δ])
-                @test findfirst(==(k), Δ) < idx # serialization breadth-first
-                @test x^representative(δ, Δ, Sch) == δ
-            end
-        end
-
-        @testset "action on perms" begin
-            σ = P([1,4,2,3]) # perm"(2,4,3)"
-            τ = P([2,3,1]) # perm"(1,2,3)"
-            x = one(σ)
-            S = [σ, τ]
-
-            Δ, Sch = schreier(x, S, *)
-            @test length(Δ) == 12
-            for (idx,g) in pairs(Δ)
-                g == x && continue
-                h = g*inv(Sch[g])
-                @test findfirst(==(h), Δ) < idx
-                @test x*representative(g, Δ, Sch, *) == g
+            if orb isa CGT.AbstractTransversal
+                @test orb[first(orb)] isa AbstractPermutations.AbstractPermutation
+                for pt in orb
+                    @test pt == orb[pt]
+                end
             end
         end
     end
 end
+
+test_orbit_interface(CGT.Permutation, CGT.Orbit)
+test_orbit_interface(CGT.CyclePermutation2, CGT.Orbit)
+
+test_orbit_interface(CGT.Permutation, CGT.Transversal)
+test_orbit_interface(CGT.CyclePermutation2, CGT.Transversal)
+
+test_orbit_interface(CGT.Permutation, CGT.SchreierTree)
+test_orbit_interface(CGT.CyclePermutation2, CGT.SchreierTree)
+

@@ -1,5 +1,3 @@
-import CGT_UniHeidelberg_2022: Permutation, degree, @perm_str
-
 @testset "AbstractPermutation API: $P" for P in [Permutation, CyclePermutation, CyclePermutation2]
 
     σ = P([2,1,3])
@@ -16,14 +14,18 @@ import CGT_UniHeidelberg_2022: Permutation, degree, @perm_str
     @test degree(τ) == 3
     @test degree(one(σ)) == 1
 
-    @test CGT_UniHeidelberg_2022.orbit_plain(1, [P([2,3,4,1])]) == [1,2,3,4]
-
     @test sprint(show, σ) == "(1,2)"
     @test sprint(show, τ) == "(2,3)"
     @test sprint(show, one(σ)) == "()"
     ρ = P([2,3,4,1])
     @test sprint(show, ρ) == "(1,2,3,4)"
     @test sprint(show, ρ*ρ) == "(1,3)(2,4)"
+
+    @test AbstractPermutations.firstmoved(one(σ)) == nothing
+    @test AbstractPermutations.firstmoved(τ) == 2
+
+    @test σ^7 == σ
+    @test τ^-8 == one(τ)
 end
 
 @testset "Permutations (deserialization)" begin
@@ -41,12 +43,12 @@ end
     @test Permutation([4,1,2,3]) == perm"(1,2)(2,3)(3,4)"
 
     # Invalid input
-    @test_throws Meta.ParseError string_to_cycles("(1,)")
-    @test_throws Meta.ParseError string_to_cycles("(,2)")
-    @test_throws Meta.ParseError string_to_cycles("()")
-    @test_throws Meta.ParseError string_to_cycles("(1,2")
-    @test_throws Meta.ParseError string_to_cycles("2,1)")
-    @test_throws Meta.ParseError string_to_cycles("2")
-    @test_throws Meta.ParseError string_to_cycles("2;1")
-    @test_throws Meta.ParseError string_to_cycles("(2,3,1)⋅(4,5)") # this or (2,3,1)∗(4,5) is arguably also a valid case
+    @test_throws Meta.ParseError CGT.string_to_cycles("(1,)")
+    @test_throws Meta.ParseError CGT.string_to_cycles("(,2)")
+    @test_throws Meta.ParseError CGT.string_to_cycles("()")
+    @test_throws Meta.ParseError CGT.string_to_cycles("(1,2")
+    @test_throws Meta.ParseError CGT.string_to_cycles("2,1)")
+    @test_throws Meta.ParseError CGT.string_to_cycles("2")
+    @test_throws Meta.ParseError CGT.string_to_cycles("2;1")
+    @test_throws Meta.ParseError CGT.string_to_cycles("(2,3,1)⋅(4,5)") # this or (2,3,1)∗(4,5) is arguably also a valid case
 end

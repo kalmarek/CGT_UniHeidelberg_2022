@@ -1,9 +1,8 @@
 module AbstractPermutations
 
 import ..GroupElement
-import ..orbit_plain
 
-export AbstractPermutation, degree
+export AbstractPermutation, degree, firstmoved
 
 """
     AbstractPermutation
@@ -29,7 +28,27 @@ By convention `degree` of the trivial permutation must return `1`.
 """
 function degree end
 
+"""
+    firstmoved(σ::AbstractPermutation)
+Return the minimal `i` such that `σ(i) ≠ i`, or `nothing` if `σ == one(σ)`.
+"""
+firstmoved(σ::AbstractPermutation) = nextmoved(σ, 1)
+
+"""
+    nextmoved(σ::AbstractPermutation, d::Integer)
+Return the first `i ≥ d` such that `σ(i) ≠ i`, or `nothing` if no such `i` exists.
+"""
+function nextmoved(σ::AbstractPermutation, d::Integer)
+    for i in d:degree(σ)
+        if σ(i) ≠ i
+            return i
+        end
+    end
+    return nothing # when σ fixes all points ≥ d
+end
+
 Base.one(σ::P) where P<:AbstractPermutation = P(Int[], false)
+Base.isone(σ::AbstractPermutation) = degree(σ) == 1
 
 function Base.inv(σ::P) where P<:AbstractPermutation
     img = collect(1:degree(σ))
@@ -46,6 +65,29 @@ function Base.:(*)(σ::P, τ::AbstractPermutation) where P<:AbstractPermutation
         img[i] = τ(σ(i))
     end
     return P(img, false)
+end
+
+function power_by_composition(σ::AbstractPermutation, n::Integer)
+    @assert n ≥ 0
+    img = collect(1:degree(σ))
+    for i in 1:degree(σ)
+        k = i
+        for j in 1:n
+            k = σ(k)
+        end
+        img[i] = k # = σ(σ(...σ(i)...))
+    end
+    return typeof(σ)(img, false)
+end
+
+function Base.:(^)(σ::AbstractPermutation, n::Integer)
+    n < 0 && return inv(σ)^n
+    if 1 ≤ n ≤ 10
+        return power_by_composition(σ, n)
+    else
+        # TODO: use cycle decomposition to speedup powering?
+        return Base.power_by_squaring(σ, n)
+    end
 end
 
 function Base.:(==)(σ::AbstractPermutation, τ::AbstractPermutation)
@@ -72,23 +114,23 @@ end
 =#
 
 function Base.show(io::IO, σ::AbstractPermutation)
-    is_trivial = true
-    for cycle in cycle_decomposition(σ)
-        if length(cycle) == 1
-            continue
-        else
-            is_trivial = false
-            print(io, "(")
-            join(io, cycle, ",")
-            print(io, ")")
-        end
-    end
-    if is_trivial
+    if isone(σ)
         print(io, "()")
+    else
+        for cycle in cycle_decomposition(σ)
+            if length(cycle) == 1
+                continue
+            else
+                print(io, "(")
+                join(io, cycle, ",")
+                print(io, ")")
+            end
+        end
     end
 end
 
 function cycle_decomposition(σ::AbstractPermutation)
+    isone(σ) && return Vector{Vector{Int}}()
     visited = falses(degree(σ))
     cycles = Vector{Vector{Int}}()
     # each cycle will be a Vector{Int} and we have a whole bunch of them
@@ -98,7 +140,7 @@ function cycle_decomposition(σ::AbstractPermutation)
             # the same orbit twice
             continue # i.e. skip the rest of the body and continue with the next i
         end
-        Δ = orbit_plain(i, σ, ^)
+        Δ = _orbit_plain(i, σ, ^)
         visited[Δ] .= true # modify the `visited` along the whole orbit
         push!(cycles, Δ) # add obtained orbit to cycles
     end
@@ -106,5 +148,18 @@ function cycle_decomposition(σ::AbstractPermutation)
 end
 
 Base.:^(i::Integer, σ::AbstractPermutation) = σ(i)
+
+function _orbit_plain(pt::Integer, σ::AbstractPermutation, action=^)
+    Δ = [pt]
+    Δ_set = Set(Δ)
+    for δ in Δ
+        γ = action(δ, σ)
+        if γ ∉ Δ_set
+            push!(Δ, γ)
+            push!(Δ_set, γ)
+        end
+    end
+    return Δ
+end
 
 end # of module AbstractPermutations

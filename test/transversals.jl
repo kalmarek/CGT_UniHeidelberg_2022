@@ -32,22 +32,22 @@ import CGT_UniHeidelberg_2022: transversal, schreier, representative, GroupEleme
 
     @testset "factored transversal" begin
         # implement here transversal_factored which contains list of generators instead of their product
-        function transversal_factored(x, S::AbstractVector{<:GroupElement}, action=^)
-			@assert !isempty(S) # groups need generators
-			Δ = [x]
-			T = Dict(x => [one(first(S))])
-			for δ in Δ
-				for s in S
-					γ = action(δ, s)
-					if γ ∉ keys(T)
-						push!(Δ, γ)
-						T[γ] = vcat(T[δ], s)
-					end
-				end
-			end
-			
-			return Δ, T
-		end
+        function transversal_factored(x, S::AbstractVector{<:GroupElement}, action = ^)
+            @assert !isempty(S) # groups need generators
+            Δ = [x]
+            T = Dict(x => [one(first(S))])
+            for δ in Δ
+                for s in S
+                    γ = action(δ, s)
+                    if γ ∉ keys(T)
+                        push!(Δ, γ)
+                        T[γ] = vcat(T[δ], s)
+                    end
+                end
+            end
+
+            return Δ, T
+        end
 
         @testset "action on points" begin
             σ = P([1,3,4,2]) # perm"(2,3,4)"

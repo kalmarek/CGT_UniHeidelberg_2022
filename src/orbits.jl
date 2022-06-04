@@ -117,4 +117,67 @@ function Base.push!(t::Transversal, y_g::Pair{T, <:GroupElement}) where T
 end
 Base.setindex!(t::Transversal, g::GroupElement, pt) = push!(t, pt=>g)
 
+# Assignment 3
+# Implement struct SchreierTree{T, GEl, ...} <: AbstractTransversal{T, GEl} ... end
+struct SchreierTree{T,GEl,Ac} <: AbstractTransversal{T,GEl}
+    points::Vector{T}
+    factors::Dict{T,GEl} # factors (generators) for representatives in transversal
+    action::Ac
 
+    function SchreierTree{T,GEl,Ac}(
+        point,
+        S::AbstractVector{<:GroupElement},
+        action = ^,
+    ) where {T,GEl,Ac}
+        @assert !isempty(S) "The generating set must be non-empty, got $S"
+        Sch = new{T,GEl,Ac}(T[point], Dict(point => one(first(S))), action)
+        for pt in Sch
+            for s in S
+                y = action(pt, s)
+                # Q: The AbstractTransversal interface dicates that "[push!] should replace the 
+                # existing representative if `y` is already present in the transversal.". This is
+                # done accordingly in the implementation of push!, which includes an `in` check.
+                # However, this `in` check is repeated here, with a `continue` clause, preventing
+                # the new representative to be pushed. Uncommenting the line, however, results in
+                # a non-trivial factor for the distinguished element, and getindex does
+                y ∈ Sch && continue
+                push!(Sch, y=>s) # Push (reference to) group generator
+            end
+        end
+        return Sch
+    end
+end
+
+SchreierTree(point::T, S::AbstractVector{GEl}, action = ^) where {T, GEl<:GroupElement}=
+    SchreierTree{T,GEl,typeof(action)}(point, S, action)
+
+Base.iterate(t::SchreierTree) = iterate(t.points)
+Base.iterate(t::SchreierTree, state) = iterate(t.points, state)
+Base.length(t::SchreierTree) = length(t.points)
+Base.in(x, t::SchreierTree) = haskey(t.factors, x)
+Base.first(t::SchreierTree) = first(t.points)
+action(t::SchreierTree) = t.action
+
+# Begin at last factor, and work our way up (code adapted from Assignment 2)
+function Base.getindex(t::SchreierTree, pt)
+    pt ∉ t && throw(KeyError(pt))
+    current = pt
+    g = one(t.factors[current])
+
+    while (gen = t.factors[current]) != one(t.factors[current])
+        current = t.action(current, inv(gen))
+        g = gen * g
+    end
+    return g
+end
+
+# Note that we push generators here, instead of group elements.
+function Base.push!(t::SchreierTree, y_s::Pair{T, <:GroupElement}) where T
+    y, s = y_s
+    if !(y in t)
+        push!(t.points, y)
+    end
+    t.factors[y] = s
+    return t
+end
+Base.setindex!(t::SchreierTree, g::GroupElement, pt) = push!(t, pt=>g)

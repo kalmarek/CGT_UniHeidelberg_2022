@@ -85,7 +85,8 @@ struct Transversal{T,GEl,Ac} <: AbstractTransversal{T,GEl}
             for s in S
                 y = action(pt, s)
                 y ∈ trans && continue
-                push!(trans, y=>trans[pt]*s)
+                #push!(trans, y=>trans[pt]*s)
+                push!(trans, pt, y=>s)
             end
         end
         return trans
@@ -107,12 +108,12 @@ function Base.getindex(t::Transversal, pt)
     return t.representatives[pt]
 end
 
-function Base.push!(t::Transversal, y_g::Pair{T, <:GroupElement}) where T
-    y, g = y_g
+function Base.push!(t::Transversal, pt, y_s::Pair{T, <:GroupElement}) where T
+    y, s = y_s
     if !(y in t)
         push!(t.points, y)
     end
-    t.representatives[y] = g
+    t.representatives[y] = t.representatives[pt]*s
     return t
 end
 Base.setindex!(t::Transversal, g::GroupElement, pt) = push!(t, pt=>g)
@@ -141,7 +142,7 @@ struct SchreierTree{T,GEl,Ac} <: AbstractTransversal{T,GEl}
                 # the new representative to be pushed. Uncommenting the line, however, results in
                 # a non-trivial factor for the distinguished element, and getindex does
                 y ∈ Sch && continue
-                push!(Sch, y=>s) # Push (reference to) group generator
+                push!(Sch, pt, y=>s) # Push (reference to) group generator
             end
         end
         return Sch
@@ -172,7 +173,7 @@ function Base.getindex(t::SchreierTree, pt)
 end
 
 # Note that we push generators here, instead of group elements.
-function Base.push!(t::SchreierTree, y_s::Pair{T, <:GroupElement}) where T
+function Base.push!(t::SchreierTree, pt, y_s::Pair{T, <:GroupElement}) where T
     y, s = y_s
     if !(y in t)
         push!(t.points, y)

@@ -4,7 +4,7 @@ struct StabilizerChain{T<:AbstractTransversal, P<:AbstractPermutation}
 
     function StabilizerChain(
         transversals::AbstractVector{<:AbstractTransversal},
-        gens::AbstractVector{<:AbstractPermutation},
+        gens::AbstractVector{<:AbstractVector{<:AbstractPermutation}},
     )
         @assert length(transversals) == length(gens)
         T = eltype(transversals)
@@ -43,7 +43,7 @@ function sift(sc::StabilizerChain, g::AbstractPermutation; start_at_depth=1)
     for i in start_at_depth:depth(sc)
         T = transversal(sc, i)
         β = first(T)
-        γ = action(sc)(β, r)
+        γ = action(T)(β, r)
 
         if γ ∉ T
             return i, r
@@ -104,9 +104,10 @@ function extend_gens!(sc::StabilizerChain, g::AbstractPermutation; at_depth::Int
         γ = action(T)(δ, g)
         if γ ∉ T
             # add γ to orbit, update transversal
-            push!(T, γ=>T(δ)*g)
+            push!(T, δ, γ=>g)
         else
-            s = T(δ)*g*inv(T(γ)) # Schreier generator
+            # γ is a coset representative for G(i+1) in G(i)
+            s = T[δ]*g*inv(T[γ]) # Schreier generator
             push!(sc, s, at_depth=at_depth+1) # push to next layer
         end
     end
@@ -116,9 +117,9 @@ function extend_gens!(sc::StabilizerChain, g::AbstractPermutation; at_depth::Int
         for b ∈ sc.gens[at_depth] # includes g
             γ = action(T)(δ, b)
             if γ ∉ T
-                push!(T, γ=>T(δ)*b)
+                push!(T, δ, γ=>b)
             else
-                s = T(δ)*b*inv(T(γ))
+                s = T[δ]*b*inv(T[γ])
                 push!(sc, s, at_depth=at_depth+1)
             end
         end

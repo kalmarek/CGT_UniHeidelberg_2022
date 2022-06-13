@@ -4,7 +4,7 @@ struct StabilizerChain{T<:AbstractTransversal, P<:AbstractPermutation}
 
     function StabilizerChain(
         transversals::AbstractVector{<:AbstractTransversal},
-        gens::AbstractVector{AbstractVector{Permutation}},
+        gens::AbstractVector{<:AbstractVector{<:AbstractPermutation}},
         # for some reason I could only get the tests to work when I specified the
         # type here, so using 'Permutation' instead of '<:AbstractPermutation'
     )
@@ -15,7 +15,7 @@ struct StabilizerChain{T<:AbstractTransversal, P<:AbstractPermutation}
     end
 end
 
-StabilizerChain{T, P}() where {T,P} = StabilizerChain(Vector{T}(), Vector{AbstractVector{P}}())
+StabilizerChain{T, P}() where {T,P} = StabilizerChain(Vector{T}(), Vector{Vector{P}}())
 
 depth(sc::StabilizerChain) = length(sc.transversals)
 transversals(sc::StabilizerChain) = sc.transversals

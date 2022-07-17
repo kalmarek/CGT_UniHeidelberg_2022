@@ -201,7 +201,7 @@ Base.size(w::Word) = size(w.letter_indices)
 Base.getindex(w::Word, i::Integer) = w.letter_indices[i]
 Base.setindex!(w::Word, v, i::Integer) = w.letter_indices[i] = v
 
-Base.resize!(w::Word, n::Integer) = resize!(w.letter_indices, n)
+Base.resize!(w::Word, n::Integer) = Word(resize!(w.letter_indices, n))
 
 Base.pop!(w::Word) = pop!(w.letter_indices)
 Base.popfirst!(w::Word) = popfirst!(w.letter_indices)
@@ -212,7 +212,7 @@ Base.pushfirst!(w::Word, n::Integer) = pushfirst!(w.letter_indices, n)
 Base.append!(w::Word, v::AbstractWord) = append!(w.letter_indices, v)
 Base.prepend!(w::Word, v::AbstractWord) = prepend!(w.letter_indices, v)
 
-Base.similar(w::Word{T}, n::Integer) where T = Word{T}(similar(w.letter_indices, n))
+Base.similar(w::Word{T}, n::Integer = length(w)) where T = Word{T}(similar(w.letter_indices, n))
 	
 end
 
@@ -236,6 +236,18 @@ Here is the specification of `AbstractWord` API:
 md"
 And a particular implementation of it
 "
+
+# ╔═╡ e094ec1d-102a-44a8-a697-e7741c7a36c4
+function issuffix(v::AbstractWord, w::AbstractWord)
+	d = length(w) - length(v)
+	d < 0 && return false
+
+	for (idx, l) in pairs(v)
+		l == w[d+idx] || return false
+	end
+
+	return true
+end
 
 # ╔═╡ ccef219d-fe0c-40e2-9000-4a7901de7735
 w1 = Word([1,2,3])
@@ -278,7 +290,15 @@ Rewrite word `w` storing the result in `v` by applying free reductions as
 defined by the inverses present in alphabet `A`.
 """
 function rewrite!(v::AbstractWord, w::AbstractWord, A::Alphabet)
-    throw("Not Implemented Yet")
+    v = resize!(v, 0)
+    while !isone(w)
+		a = popfirst!(w)
+		if !isone(v) && hasinverse(a, A) && inv(a, A) == last(v)
+			resize!(v, length(v) - 1)
+		else
+			push!(v, a)
+		end
+    end
     return v
 end
 
@@ -413,6 +433,33 @@ md"""
 What you may find useful is `@debug` macro. Debugging messages in a module may be enabled through setting `ENV["JULIA_DEBUG"] = "CGT_UniHeidelberg2022"` and disabled by deleting the key, or setting it to "".
 """
 
+# ╔═╡ 35a5b626-a10a-440e-b3e7-229a15f8c824
+@testset "Z^2" begin
+	A = Alphabet([:a, :A, :b, :B])
+	rws_z2 = [
+		Rule{Word{UInt8}}(Word([A[:a], A[:A]]), Word(Int[])),
+		Rule{Word{UInt8}}(Word([A[:A], A[:a]]), Word(Int[])),
+		Rule{Word{UInt8}}(Word([A[:b], A[:B]]), Word(Int[])),
+		Rule{Word{UInt8}}(Word([A[:B], A[:b]]), Word(Int[])),
+
+		Rule{Word{UInt8}}(Word([A[:b], A[:a]]), Word([A[:a], A[:b]])),
+		Rule{Word{UInt8}}(Word([A[:b], A[:A]]), Word([A[:A], A[:b]])),
+		Rule{Word{UInt8}}(Word([A[:B], A[:a]]), Word([A[:a], A[:B]])),
+		Rule{Word{UInt8}}(Word([A[:B], A[:A]]), Word([A[:A], A[:B]]))
+	]
+
+	for _ in 1:100
+		v = Word(UInt8[rand(1:length(A)) for _ in 1:rand(1:50)])
+		w = rewrite(v, rws_z2)
+		@test length(w) ≤ length(v)
+
+		for i in 1:length(w)-1
+			@test w[i] ≤ w[i+1]
+			w[i] == 2 || @test w[i+1] - w[i] != 1
+		end
+	end
+end
+
 # ╔═╡ f6c39a04-425a-4e32-aeab-b43f0222286b
 md"""
 ## Orderings
@@ -421,35 +468,49 @@ A crucial role in the rewriting process is played by the **rewriting ordering** 
 
 # ╔═╡ 62586465-92c7-45e5-b80d-591fcb1ef7f3
 begin
-import Base.Order: lt, Ordering
+import Base.Order: Ordering
 abstract type WordOrdering <: Ordering end
 end
 
-# ╔═╡ dd4501cf-0cdf-4c15-a515-0d1c01b9d32c
+# ╔═╡ af0bb417-20fb-4309-8b1e-0e869f2da968
 """
     struct LenLex{T} <: WordOrdering
 
 `LenLex` order compares words first by length and then by lexicographic (left-to-right) order.
 """
 struct LenLex{T} <: WordOrdering
-	....
-end
-# A = Alphabet([:a, :A, :b, :B])
-# LenLex(A, [:a, :B, :b, :A])
+	A::Alphabet{T}
+	reordering::Vector{Int}
 
-function lt(o::LenLex, lp::Integer, lq::Integer)
-	....
-end
-
-function lt(o::LenLex, p::AbstractWord, q::AbstractWord)
-    if length(p) == length(q)
-		for (lp, lq) in zip(p, q)
-			# lp < lq && return true
-			lt(o, lp, lq) && return true
+	function LenLex(A::Alphabet{T}, ord::Vector{T}) where T
+		reord = Vector{Int}(undef, length(ord))
+		for i in 1:length(ord)
+			reord[A[ord[i]]] = i
 		end
-		return false # i.e. p == q
-	else
-		return length(p) < length(q)
+		new{T}(A, reord)
+	end
+end
+
+# ╔═╡ dd4501cf-0cdf-4c15-a515-0d1c01b9d32c
+begin
+	# A = Alphabet([:a, :A, :b, :B])
+	# LenLex(A, [:a, :B, :b, :A])
+	
+	function lt(o::LenLex, lp::Integer, lq::Integer)
+		return o.reordering[lp] < o.reordering[lq]
+	end
+	
+	function lt(o::LenLex, p::AbstractWord, q::AbstractWord)
+	    if length(p) == length(q)
+			for (lp, lq) in zip(p, q)
+				# lp < lq && return true
+				lt(o, lp, lq) && return true
+				lt(o, lq, lp) && return false
+			end
+			return false # i.e. p == q
+		else
+			return length(p) < length(q)
+		end
 	end
 end
 
@@ -468,13 +529,12 @@ and many more.
 "
 
 # ╔═╡ 7df89bdf-6e09-4022-829c-0e9e87443450
-begin
-@testset "
+@testset "LenLex" begin
 	A = Alphabet([:a, :A, :b, :B])
     setinverse!(A, :a, :A)
     setinverse!(A, :b, :B)
 
-    lenlexord = LenLex(....)
+    lenlexord = LenLex(A, [:a, :A, :B, :b])
 
     @test lenlexord isa Base.Order.Ordering
 
@@ -541,6 +601,7 @@ uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 # ╠═d755aad8-c5e9-4b2f-bc25-b4e4b5955538
 # ╟─9b657b5f-f6ba-4f7b-af07-0c0b827576e2
 # ╠═1f1d17f3-7bc8-460e-9f84-c6e4185d967e
+# ╠═e094ec1d-102a-44a8-a697-e7741c7a36c4
 # ╠═ccef219d-fe0c-40e2-9000-4a7901de7735
 # ╠═606788cc-dfad-46d9-8eca-e4524d59ac43
 # ╠═1e676b97-d78b-47b0-9cf8-2467aab98956
@@ -556,8 +617,10 @@ uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 # ╟─e46af5cf-4162-4645-ae9a-8af12b970bb4
 # ╠═4aa03df1-e3e7-4837-81bf-bbe0f898dbde
 # ╟─1d5b1416-98e5-4106-8f08-26b047d6caec
+# ╠═35a5b626-a10a-440e-b3e7-229a15f8c824
 # ╟─f6c39a04-425a-4e32-aeab-b43f0222286b
 # ╠═62586465-92c7-45e5-b80d-591fcb1ef7f3
+# ╠═af0bb417-20fb-4309-8b1e-0e869f2da968
 # ╠═dd4501cf-0cdf-4c15-a515-0d1c01b9d32c
 # ╟─e2e84aeb-bffa-410d-9d65-9c83b87f7d43
 # ╠═7df89bdf-6e09-4022-829c-0e9e87443450

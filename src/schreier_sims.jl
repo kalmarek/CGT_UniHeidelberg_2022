@@ -5,8 +5,6 @@ struct StabilizerChain{T<:AbstractTransversal, P<:AbstractPermutation}
     function StabilizerChain(
         transversals::AbstractVector{<:AbstractTransversal},
         gens::AbstractVector{<:AbstractVector{<:AbstractPermutation}},
-        # for some reason I could only get the tests to work when I specified the
-        # type here, so using 'Permutation' instead of '<:AbstractPermutation'
     )
         @assert length(transversals) == length(gens)
         T = eltype(transversals)
@@ -55,7 +53,7 @@ function sift(sc::StabilizerChain, g::AbstractPermutation; start_at_depth=1)
             end
         end
     end
-    
+
     return depth(sc)+1, r
 end
 
@@ -101,7 +99,7 @@ end
 
 function extend_gens!(sc::StabilizerChain{T}, g::AbstractPermutation; at_depth::Integer) where T
     push!(sc.gens[at_depth], g) # add new generators
-    
+
     # recompute transversal + process all the new schreier generators
     β = basis(sc, at_depth)
     S = gens(sc, at_depth)
@@ -120,3 +118,8 @@ function extend_gens!(sc::StabilizerChain{T}, g::AbstractPermutation; at_depth::
     end
     return sc
 end
+
+order(sc::StabilizerChain) = order(BigInt, sc)
+
+order(::Type{I}, sc::StabilizerChain) where I =
+    convert(I, mapreduce(length, *, transversals(sc), init=one(I)))

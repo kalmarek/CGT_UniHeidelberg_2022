@@ -12,7 +12,8 @@ import CGT_UniHeidelberg_2022:
 include("small_perm_groups.jl")
 
 @testset verbose=true "CGT" begin
-   include("permutations.jl")
-   include("transversals.jl")
-   include("schreier_sims.jl")
+    include("permutations.jl")
+    include("transversals.jl")
+    include("schreier_sims.jl")
+    include("rand.jl")
 end

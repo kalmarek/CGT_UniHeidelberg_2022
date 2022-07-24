@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.3
+# v0.19.4
 
 using Markdown
 using InteractiveUtils
@@ -96,6 +96,10 @@ function Base.show(io::IO, w::AbstractWord{T}) where {T}
         join(io, w, "·")
     end
 end
+
+Base.similar(w::AbstractWord) = similar(w, eltype(w), length(w))
+Base.similar(w::AbstractWord, ::Type{T}) where T = similar(w, T, length(w))
+Base.similar(w::AbstractWord, n::Integer) = similar(w, eltype(w), n)
 
 end
 
@@ -201,7 +205,7 @@ Base.size(w::Word) = size(w.letter_indices)
 Base.getindex(w::Word, i::Integer) = w.letter_indices[i]
 Base.setindex!(w::Word, v, i::Integer) = w.letter_indices[i] = v
 
-Base.resize!(w::Word, n::Integer) = Word(resize!(w.letter_indices, n))
+Base.resize!(w::Word, n::Integer) = (resize!(w.letter_indices, n); w)
 
 Base.pop!(w::Word) = pop!(w.letter_indices)
 Base.popfirst!(w::Word) = popfirst!(w.letter_indices)
@@ -212,7 +216,7 @@ Base.pushfirst!(w::Word, n::Integer) = pushfirst!(w.letter_indices, n)
 Base.append!(w::Word, v::AbstractWord) = append!(w.letter_indices, v)
 Base.prepend!(w::Word, v::AbstractWord) = prepend!(w.letter_indices, v)
 
-Base.similar(w::Word{T}, n::Integer = length(w)) where T = Word{T}(similar(w.letter_indices, n))
+Base.similar(w::Word, ::Type{T}, n::Integer) where T = Word{T}(similar(w.letter_indices, T, n))
 	
 end
 
@@ -437,15 +441,15 @@ What you may find useful is `@debug` macro. Debugging messages in a module may b
 @testset "Z^2" begin
 	A = Alphabet([:a, :A, :b, :B])
 	rws_z2 = [
-		Rule{Word{UInt8}}(Word([A[:a], A[:A]]), Word(Int[])),
-		Rule{Word{UInt8}}(Word([A[:A], A[:a]]), Word(Int[])),
-		Rule{Word{UInt8}}(Word([A[:b], A[:B]]), Word(Int[])),
-		Rule{Word{UInt8}}(Word([A[:B], A[:b]]), Word(Int[])),
+		Word([A[:a], A[:A]]) => Word(Int[]),
+		Word([A[:A], A[:a]]) => Word(Int[]),
+		Word([A[:b], A[:B]]) => Word(Int[]),
+		Word([A[:B], A[:b]]) => Word(Int[]),
 
-		Rule{Word{UInt8}}(Word([A[:b], A[:a]]), Word([A[:a], A[:b]])),
-		Rule{Word{UInt8}}(Word([A[:b], A[:A]]), Word([A[:A], A[:b]])),
-		Rule{Word{UInt8}}(Word([A[:B], A[:a]]), Word([A[:a], A[:B]])),
-		Rule{Word{UInt8}}(Word([A[:B], A[:A]]), Word([A[:A], A[:B]]))
+		Word([A[:b], A[:a]]) => Word([A[:a], A[:b]]),
+		Word([A[:b], A[:A]]) => Word([A[:A], A[:b]]),
+		Word([A[:B], A[:a]]) => Word([A[:a], A[:B]]),
+		Word([A[:B], A[:A]]) => Word([A[:A], A[:B]]),
 	]
 
 	for _ in 1:100
@@ -466,36 +470,29 @@ md"""
 A crucial role in the rewriting process is played by the **rewriting ordering** (translation invariant well ordering). In Julia those can be implemented as follows:
 """
 
-# ╔═╡ 62586465-92c7-45e5-b80d-591fcb1ef7f3
-begin
-import Base.Order: Ordering
-abstract type WordOrdering <: Ordering end
-end
-
-# ╔═╡ af0bb417-20fb-4309-8b1e-0e869f2da968
-"""
-    struct LenLex{T} <: WordOrdering
-
-`LenLex` order compares words first by length and then by lexicographic (left-to-right) order.
-"""
-struct LenLex{T} <: WordOrdering
-	A::Alphabet{T}
-	reordering::Vector{Int}
-
-	function LenLex(A::Alphabet{T}, ord::Vector{T}) where T
-		reord = Vector{Int}(undef, length(ord))
-		for i in 1:length(ord)
-			reord[A[ord[i]]] = i
-		end
-		new{T}(A, reord)
-	end
-end
-
 # ╔═╡ dd4501cf-0cdf-4c15-a515-0d1c01b9d32c
 begin
-	# A = Alphabet([:a, :A, :b, :B])
-	# LenLex(A, [:a, :B, :b, :A])
+	import Base.Order: lt, Ordering
+	abstract type WordOrdering <: Ordering end
+
+	"""
+	    struct LenLex{T} <: WordOrdering
 	
+	`LenLex` order compares words first by length and then by lexicographic (left-to-right) order.
+	"""
+	struct LenLex{T} <: WordOrdering
+		A::Alphabet{T}
+		reordering::Vector{Int}
+	
+		function LenLex(A::Alphabet{T}, ord::Vector{T}) where T
+			reord = Vector{Int}(undef, length(ord))
+			for i in 1:length(ord)
+				reord[A[ord[i]]] = i
+			end
+			new{T}(A, reord)
+		end
+	end
+
 	function lt(o::LenLex, lp::Integer, lq::Integer)
 		return o.reordering[lp] < o.reordering[lq]
 	end
@@ -561,7 +558,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 PLUTO_MANIFEST_TOML_CONTENTS = """
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.7.3"
+julia_version = "1.7.2"
 manifest_format = "2.0"
 
 [[deps.Base64]]
@@ -619,8 +616,6 @@ uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 # ╟─1d5b1416-98e5-4106-8f08-26b047d6caec
 # ╠═35a5b626-a10a-440e-b3e7-229a15f8c824
 # ╟─f6c39a04-425a-4e32-aeab-b43f0222286b
-# ╠═62586465-92c7-45e5-b80d-591fcb1ef7f3
-# ╠═af0bb417-20fb-4309-8b1e-0e869f2da968
 # ╠═dd4501cf-0cdf-4c15-a515-0d1c01b9d32c
 # ╟─e2e84aeb-bffa-410d-9d65-9c83b87f7d43
 # ╠═7df89bdf-6e09-4022-829c-0e9e87443450

@@ -16,5 +16,6 @@ using .AbstractPermutations
 include("permutations.jl")
 include("permutations_02.jl")
 include("schreier_sims.jl")
+include("rand.jl")
 
 end # of module CGT_UniHeidelberg_2022

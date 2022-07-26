@@ -11,6 +11,20 @@ function elt_from_image(sc::StabilizerChain{T, P}, img::Vector{<:Integer}) where
     return r
 end
 
+function decompose(g::AbstractPermutation, G::PermutationGroup)
+    sc = stabilizer_chain(G)
+    L = []
+
+    for i in 1:depth(sc)
+        t = transversal(sc, i)
+        β = basis(sc, i)
+        @assert g(β) ∈ t "element not in group"
+        push!(L, t[g(β)])
+    end
+
+    return L
+end
+
 function pseudorand_init(S::Vector{<:AbstractPermutation})
     L = copy(S)
     while length(L) < 11
@@ -55,3 +69,53 @@ function Base.rand(sc::StabilizerChain)
 
     return elt_from_image(sc, img)
 end
+
+# makeshift confidence estimate to compare Base.rand and pseudorand
+# result: pseudorand is a tiny bit faster, but Base.rand seems to produce better randomness
+
+# function get_confidence(S::AbstractVector{<:Permutation})
+#     sc = schreier_sims(S)
+#     V = []
+#     n_reps = 100000
+#     L = pseudorand_init(S)
+
+#     for _ in 1:n_reps
+#         L, s = pseudorand(L)
+#         push!(V, s)
+#         #push!(V, rand(sc))
+#     end
+
+#     C = [(i, count(==(i), V)) for i in unique(V)]
+#     #@test length(C) == group_order # all elements were hit
+#     pct = []
+#     group_order = order(sc)
+#     for i = 1:length(C)
+#         push!(pct, C[i][2] * group_order / n_reps)
+#     end
+
+#     return minimum(pct), maximum(pct)
+# end
+
+# using Printf
+
+# function get_confidence_overall(SPG)
+#     pct = []
+#     for group_order in 2:30
+#         for S in SPG[group_order]
+#             push!(pct, get_confidence(S))
+#         end
+#     end
+
+#     mini, maxi = 1, 1
+#     for (a, b) in pct
+#         mini = min(mini, a)
+#         maxi = max(maxi, b)
+#     end
+
+#     return mini, maxi
+# end
+
+# function printc(a)
+#     @printf "Min: %.5f\n" a[1]
+#     @printf "Max: %.5f" a[2]
+# end

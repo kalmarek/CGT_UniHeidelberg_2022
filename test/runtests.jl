@@ -15,4 +15,5 @@ include("small_perm_groups.jl")
    include("permutations.jl")
    include("transversals.jl")
    include("schreier_sims.jl")
+   include("perm_groups.jl")
 end
